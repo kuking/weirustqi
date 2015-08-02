@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter, Error};
+use std::hash::{Hash, Hasher};
 
 use super::Color;
 use super::Move;
@@ -6,7 +7,7 @@ use super::Coord;
 
 include!("zobrist-const.rs");
 
-#[derive(Clone)]
+#[derive(Clone, Eq, Debug)]
 pub struct Board  {
     size :u8,
     data :Vec<Color>,
@@ -59,8 +60,15 @@ impl Board {
         //assert!(coord.row > self.size || coord.row > self.size);
         coord.row as usize * self.size as usize + coord.col as usize
     }
+
+    #[inline]
     pub fn size(&self) -> u8 {
         self.size
+    }
+
+    #[inline]
+    pub fn zobrist(&self) -> u64 {
+        self.zobrist
     }
 }
 
@@ -72,13 +80,27 @@ impl Display for Board {
     }
 }
 
+impl Hash for Board {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        state.write_u64(self.zobrist);
+    }
+}
 
+impl PartialEq for Board {
+    fn eq(&self, other :&Board) -> bool {
+        self.size() == other.size() && self.zobrist() == other.zobrist()
+    }
+    fn ne(&self, other :&Board) -> bool {
+        !self.eq(other)
+    }
+}
 
 #[cfg(test)]
 mod test {
 
     use super::*;
     use super::super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn it_creates_boards() {
@@ -107,6 +129,79 @@ mod test {
 
         board.set_move(Move::Stone{color: Color::Empty, coord : lecoord});
         assert_eq!(Color::Empty, board.get(lecoord));
+    }
+
+    fn given_board_with_two_moves() -> Board {
+        let mut board = Board::new(19);
+        board.set_move(Move::Stone{color :Color::White, coord : Coord::new(2,3)});
+        board.set_move(Move::Stone{color :Color::Black, coord : Coord::new(3,2)});
+        board
+    }
+
+    #[test]
+    fn it_maintains_state_complex() {
+        let mut board = given_board_with_two_moves();
+        board.set_move(Move::Stone{color :Color::White, coord : Coord::new(2,3)});
+        board.set_move(Move::Stone{color :Color::Black, coord : Coord::new(3,2)});
+        assert_eq!(board.get(Coord::new(2,3)), Color::White);
+        assert_eq!(board.get(Coord::new(3,2)), Color::Black);
+    }
+
+    #[test]
+    fn it_eq_zobrist_for_two_empty_boards() {
+        let b1 = Board::new(19);
+        let b2 = Board::new(19);
+        assert_eq!(b1.zobrist(), b2.zobrist());
+        assert!(b1.zobrist() != 0);
+    }
+
+    #[test]
+    fn it_wont_zero_zobrist_for_empty_board() {
+        assert!(Board::new(5).zobrist() != 0);
+        assert!(Board::new(9).zobrist() != 0);
+        assert!(Board::new(11).zobrist() != 0);
+        assert!(Board::new(19).zobrist() != 0);
+        assert!(Board::new(32).zobrist() != 0);
+    }
+
+    #[test]
+    fn it_wont_eq_zobrist_for_empty_boards_of_diff_sizes() {
+        assert!(Board::new(9).zobrist() != Board::new(11).zobrist());
+        assert!(Board::new(11).zobrist() != Board::new(19).zobrist());
+        assert!(Board::new(19).zobrist() != Board::new(32).zobrist());
+    }
+
+    #[test]
+    fn it_hashes_empty_boards_as_same() {
+        let mut h : HashSet<Board> = HashSet::new();
+        assert_eq!(0, h.len());
+        h.insert(Board::new(9));
+        assert_eq!(1, h.len());
+        h.insert(Board::new(9));
+        assert_eq!(1, h.len());
+        // but another size should make two elements in the set
+        h.insert(Board::new(11));
+        assert_eq!(2, h.len());
+        // one of 19
+        h.insert(Board::new(19));
+        assert_eq!(3, h.len());
+        // another modified one - of 19... should be different
+        h.insert(given_board_with_two_moves());
+        assert_eq!(4, h.len());
+        // but again, should not add any extra entry
+        h.insert(given_board_with_two_moves());
+        assert_eq!(4, h.len());
+    }
+
+    #[test]
+    fn it_equals() {
+        assert!(Board::new(14) == Board::new(14));
+        assert!(Board::new(14) != Board::new(15));
+    }
+
+    #[test]
+    fn it_equals_modified_boards() {
+        assert_eq!(given_board_with_two_moves(), given_board_with_two_moves());
     }
 
     //
