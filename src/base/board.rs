@@ -172,20 +172,22 @@ mod test {
     }
 
     #[test]
-    fn it_hashes_empty_boards_as_same() {
+    fn it_hashes_boards() {
         let mut h : HashSet<Board> = HashSet::new();
         assert_eq!(0, h.len());
+        // one board
         h.insert(Board::new(9));
         assert_eq!(1, h.len());
+        // same board, len is the same
         h.insert(Board::new(9));
         assert_eq!(1, h.len());
-        // but another size should make two elements in the set
+        // but another sized board will two elements in the set
         h.insert(Board::new(11));
         assert_eq!(2, h.len());
-        // one of 19
+        // one of 19 - so three
         h.insert(Board::new(19));
         assert_eq!(3, h.len());
-        // another modified one - of 19... should be different
+        // another of same size (19), but modified modified should be different
         h.insert(given_board_with_two_moves());
         assert_eq!(4, h.len());
         // but again, should not add any extra entry
