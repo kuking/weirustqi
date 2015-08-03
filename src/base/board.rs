@@ -16,12 +16,8 @@ pub struct Board  {
 
 impl Board {
     pub fn new(board_size :usize) -> Self {
-        if board_size>BOARD_MAX_SIDE {
-            panic!(format!("I'm sorry boards up to {} are possible; is 19 not enough?", BOARD_MAX_SIDE));
-        }
-        if board_size<5 {
-            panic!("A board less than 5x5?");
-        }
+        debug_assert!(board_size<=BOARD_MAX_SIDE, format!("I'm sorry boards up to {} are possible; is 19 not enough?", BOARD_MAX_SIDE));
+        debug_assert!(board_size>4, "Do you really want a board smaller than 5x5?");
         Board {
             size : board_size as u8,
             data : (0..board_size*board_size).map(|_| Color::Empty).collect(),
@@ -57,7 +53,7 @@ impl Board {
 
     #[inline]
     fn data_offset(&self, coord : Coord) -> usize {
-        //assert!(coord.row > self.size || coord.row > self.size);
+        debug_assert!(coord.row < self.size || coord.row < self.size);
         coord.row as usize * self.size as usize + coord.col as usize
     }
 
@@ -99,7 +95,8 @@ impl PartialEq for Board {
 mod test {
 
     use super::*;
-    use super::super::*;
+    use super::BOARD_MAX_SIDE;
+    use base::*;
     use std::collections::HashSet;
 
     #[test]
@@ -148,6 +145,27 @@ mod test {
     }
 
     #[test]
+    fn it_handles_board_limits() {
+        let mut board = Board::new(BOARD_MAX_SIDE);
+        for coord in Coord::all_possibles(BOARD_MAX_SIDE) {
+            board.set_move( Move::Stone{color: Color::Black, coord: coord});
+        }
+        let max_coord = Coord::new_us(BOARD_MAX_SIDE-1, BOARD_MAX_SIDE-1);
+        let min_coord = Coord::new_us(0,0);
+        board.set_move( Move::Stone{color: Color::White, coord: max_coord} );
+        board.set_move( Move::Stone{color: Color::White, coord: min_coord} );
+        // it tests all positions to be sure there is not 'sliding' into neighbour intersection
+        for coord in Coord::all_possibles(BOARD_MAX_SIDE) {
+            let color = board.get(coord);
+            if coord == max_coord || coord == min_coord {
+                assert_eq!(Color::White, color);
+            } else {
+                assert_eq!(Color::Black, color);
+            }
+        }
+    }
+
+    #[test]
     fn it_eq_zobrist_for_two_empty_boards() {
         let b1 = Board::new(19);
         let b2 = Board::new(19);
@@ -193,6 +211,9 @@ mod test {
         // but again, should not add any extra entry
         h.insert(given_board_with_two_moves());
         assert_eq!(4, h.len());
+        // border_case
+        h.insert(Board::new(BOARD_MAX_SIDE));
+        assert_eq!(5, h.len());
     }
 
     #[test]
@@ -244,7 +265,5 @@ mod test {
         let mut board = Board::new(19);
         b.iter(|| board.set_moves( all_moves(19) ));
     }
-
-
 
 }
