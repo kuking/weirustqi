@@ -26,7 +26,7 @@ impl Board {
     }
 
     pub fn set_move(&mut self, m :Move) {
-        if let Move::Stone {color, coord} = m {
+        if let Move::Stone(coord, color) = m {
             let o = self.data_offset(coord);
             //zobrist
             let curr = self.data[o];
@@ -119,33 +119,33 @@ mod tests {
 
     #[test]
     fn it_maintains_state() {
-        let lecoord = Coord::new(2,3);
+        let coord = Coord::new(2,3);
         let mut board = Board::new(32);
 
-        assert_eq!(Color::Empty, board.get(lecoord));
+        assert_eq!(Color::Empty, board.get(coord));
 
-        board.set_move(Move::Stone{color: Color::White, coord : lecoord});
-        assert_eq!(Color::White, board.get(lecoord));
+        board.set_move(Move::Stone(coord, Color::White));
+        assert_eq!(Color::White, board.get(coord));
 
-        board.set_move(Move::Stone{color: Color::Black, coord : lecoord});
-        assert_eq!(Color::Black, board.get(lecoord));
+        board.set_move(Move::Stone(coord, Color::Black));
+        assert_eq!(Color::Black, board.get(coord));
 
-        board.set_move(Move::Stone{color: Color::Empty, coord : lecoord});
-        assert_eq!(Color::Empty, board.get(lecoord));
+        board.set_move(Move::Stone(coord, Color::Empty));
+        assert_eq!(Color::Empty, board.get(coord));
     }
 
     fn given_board_with_two_moves() -> Board {
         let mut board = Board::new(19);
-        board.set_move(Move::Stone{color :Color::White, coord : Coord::new(2,3)});
-        board.set_move(Move::Stone{color :Color::Black, coord : Coord::new(3,2)});
+        board.set_move(Move::Stone(Coord::new(2,3), Color::White));
+        board.set_move(Move::Stone(Coord::new(3,2), Color::Black));
         board
     }
 
     #[test]
     fn it_maintains_state_complex() {
         let mut board = given_board_with_two_moves();
-        board.set_move(Move::Stone{color :Color::White, coord : Coord::new(2,3)});
-        board.set_move(Move::Stone{color :Color::Black, coord : Coord::new(3,2)});
+        board.set_move(Move::Stone(Coord::new(2,3), Color::White));
+        board.set_move(Move::Stone(Coord::new(3,2), Color::Black));
         assert_eq!(board.get(Coord::new(2,3)), Color::White);
         assert_eq!(board.get(Coord::new(3,2)), Color::Black);
     }
@@ -154,12 +154,12 @@ mod tests {
     fn it_handles_board_limits() {
         let mut board = Board::new(BOARD_MAX_SIDE);
         for coord in Coord::all_possibles(BOARD_MAX_SIDE) {
-            board.set_move( Move::Stone{color: Color::Black, coord: coord});
+            board.set_move( Move::Stone(coord, Color::Black));
         }
         let max_coord = Coord::new_us(BOARD_MAX_SIDE-1, BOARD_MAX_SIDE-1);
         let min_coord = Coord::new_us(0,0);
-        board.set_move( Move::Stone{color: Color::White, coord: max_coord} );
-        board.set_move( Move::Stone{color: Color::White, coord: min_coord} );
+        board.set_move( Move::Stone(max_coord, Color::White) );
+        board.set_move( Move::Stone(min_coord, Color::White) );
         // it tests all positions to be sure there is not 'sliding' into neighbour intersection
         for coord in Coord::all_possibles(BOARD_MAX_SIDE) {
             let color = board.get(coord);
@@ -244,7 +244,7 @@ mod tests {
             for coln in 0..board_size {
                 let lecolor = if (rown*coln) % 2 == 0 { Color::White } else { Color::Black };
                 let lecoord = Coord::new_us(rown, coln);
-                res.push ( Move::Stone {color: lecolor, coord: lecoord} );
+                res.push ( Move::Stone (lecoord, lecolor) );
             }
         }
         res

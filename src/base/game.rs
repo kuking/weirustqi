@@ -88,7 +88,7 @@ impl Game {
         let coords = Self::handicap_coords_for(board.size());
         assert!(coords.len()>0, format!("I dont know how to process handicaps for boards of size {}", board.size()));
         for i in 0..handicap {
-            board.set_move( Move::Stone { coord: coords[i], color : Color::Black  })
+            board.set_move(Move::Stone(coords[i], Color::Black))
         }
     }
 
