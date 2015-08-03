@@ -2,9 +2,9 @@
 use std::collections::HashSet;
 use std::collections::HashMap;
 
-use base::Color;
-use super::Move;
-use super::Coord;
+use base::color::*;
+use base::amove::*;
+use base::coord::*;
 
 use base::board::Board;
 
@@ -74,7 +74,9 @@ impl Game {
 mod test {
 
     use super::*;
-    use base::*;
+    use base::color::*;
+    use base::amove::*;
+    use base::coord::*;
 
     #[test]
     fn it_builds_a_simple_new_game() {

@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter, Error};
 use std::hash::{Hash, Hasher};
 
-use super::Color;
-use super::Move;
-use super::Coord;
+use base::color::*;
+use base::amove::*;
+use base::coord::*;
 
 include!("zobrist-const.rs");
 
@@ -94,10 +94,14 @@ impl PartialEq for Board {
 #[cfg(test)]
 mod test {
 
+    use std::collections::HashSet;
+    
     use super::*;
     use super::BOARD_MAX_SIDE;
-    use base::*;
-    use std::collections::HashSet;
+
+    use base::color::*;
+    use base::amove::*;
+    use base::coord::*;
 
     #[test]
     fn it_creates_boards() {
