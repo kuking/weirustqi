@@ -74,14 +74,17 @@ impl FromStr for Coord {
 impl Display for Coord {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         let rowc = if self.row>8 { (self.row+1+65) as char } else { (self.row+65) as char };
-        f.write_str(&format!("{}{}", rowc, self.col+1));
-        Ok(())
+        f.write_fmt(format_args!("{}{}", rowc, self.col+1))
     }
-
 }
 
 #[derive(Debug)]
 pub struct CoordParseError(());
+
+
+//
+// Tests
+//
 
 #[cfg(test)]
 mod test {
@@ -133,7 +136,7 @@ mod test {
 
     #[test]
     fn it_from_str_to_str_eq() {
-        for co in vec!("A1", "A2", "A3", "A20", "B3", "Z20", "G1", "H5") {
+        for co in vec!("A1", "A2", "A3", "A20", "B3", "Z20", "G1", "H5", "Z99") {
             assert_eq!(format!("{}", Coord::from_str(&co).unwrap()), co);
         }
     }

@@ -92,7 +92,6 @@ mod test {
 
     use super::*;
     use base::color::*;
-    use base::moves::*;
     use base::coord::*;
 
     #[test]
@@ -110,7 +109,7 @@ mod test {
     }
 
     #[test]
-    fn handicap__it_sets_white_as_first_player_when_handicaped() {
+    fn handicap_it_sets_white_as_first_player_when_handicaped() {
         let g = Game::new(19, 0.0, 1);
         assert_eq!(Color::White, g.next_turn());
     }

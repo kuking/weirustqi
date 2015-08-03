@@ -71,8 +71,7 @@ impl Board {
 
 impl Display for Board {
     fn fmt(&self, fmt : &mut Formatter) -> Result<(), Error> {
-        fmt.write_str(&format!("I'm a board size {}!\n", &self.size));
-        return Ok(());
+        fmt.write_str(&format!("I'm a board size {}!\n", &self.size))
     }
 }
 
