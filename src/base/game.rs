@@ -1,13 +1,14 @@
 
 use std::collections::HashSet;
-use std::collections::HashMap;
+
+use std::str::FromStr;
 
 use base::color::*;
-use base::amove::*;
+use base::moves::*;
 use base::coord::*;
+use base::board::*;
 
-use base::board::Board;
-
+#[derive(Debug)]
 pub struct Game {
     board    : Board,
     komi     : f32,
@@ -22,13 +23,15 @@ pub struct Game {
 
 impl Game {
 
-    pub fn new(board_size :usize, komi :f32, handicap :u16) -> Self {
+    pub fn new(board_size :usize, komi :f32, handicap :usize) -> Self {
         let mut le_board = Board::new(board_size);
-
+        if handicap>0 {
+            Self::set_handicap_stones(&mut le_board, handicap)
+        }
         Game {
             board : le_board,
             komi : komi,
-            handicap : handicap,
+            handicap : handicap as u16,
             black_dead : 0,
             white_dead : 0,
             next_turn : if handicap>0 {Color::White} else {Color::Black},
@@ -56,16 +59,28 @@ impl Game {
         }
     }
 
-
-    pub fn handicap_coords_for(board_size :usize) -> Vec<Coord> {
+    pub fn handicap_coords_for(board_size :u8) -> Vec<Coord> {
+        // no fast, but this doesn't need to be too fast.
         match board_size {
-            19 => vec!( Coord::from_str(&"D4"), Coord::from_str(&"Q16"), Coord::from_str(&"D16"),
-                        Coord::from_str(&"Q4"), Coord::from_str(&"D10"), Coord::from_str(&"Q10"),
-                        Coord::from_str(&"K4"), Coord::from_str(&"K16"), Coord::from_str(&"K10") ),
+            19 => vec!( Coord::from_str(&"D4").unwrap(),  Coord::from_str(&"Q16").unwrap(),
+                        Coord::from_str(&"D16").unwrap(), Coord::from_str(&"Q4").unwrap(),
+                        Coord::from_str(&"D10").unwrap(), Coord::from_str(&"Q10").unwrap(),
+                        Coord::from_str(&"K4").unwrap(),  Coord::from_str(&"K16").unwrap(),
+                        Coord::from_str(&"K10").unwrap() ),
             _ => vec!()
         }
     }
 
+
+    // mostly private
+
+    fn set_handicap_stones(board : &mut Board, handicap :usize) {
+        let coords = Self::handicap_coords_for(board.size());
+        assert!(coords.len()>0, format!("I dont know how to process handicaps for boards of size {}", board.size()));
+        for i in 0..handicap {
+            board.set_move( Move::Stone { coord: coords[i], color : Color::Black  })
+        }
+    }
 
 }
 
@@ -73,9 +88,11 @@ impl Game {
 #[cfg(test)]
 mod test {
 
+    use std::str::FromStr;
+
     use super::*;
     use base::color::*;
-    use base::amove::*;
+    use base::moves::*;
     use base::coord::*;
 
     #[test]
@@ -99,9 +116,28 @@ mod test {
     }
 
     #[test]
-    fn handicap__it_sets_stones_in_place_for_handicap() {
-        let g = Game::new(19, 0.0, 1);
+    fn handicap_it_sets_stones_in_place() {
+        let g = Game::new(19, 0.0, 9);
         let b = g.board();
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"D4").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q16").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"D16").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q4").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"D10").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q10").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"K4").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"K16").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"K10").unwrap()));
+    }
+
+    #[test]
+    fn handicap_it_sets_stones_in_place_2() {
+        let g = Game::new(19, 0.0, 3);
+        let b = g.board();
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"D4").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q16").unwrap()));
+        assert_eq!(Color::Black, b.get(Coord::from_str(&"D16").unwrap()));
+        assert_eq!(Color::Empty, b.get(Coord::from_str(&"Q4").unwrap()));
     }
 
 
