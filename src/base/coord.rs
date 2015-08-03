@@ -82,9 +82,8 @@ impl Display for Coord {
 pub struct CoordParseError(());
 
 
-//
+// *********************************************************************************************
 // Tests
-//
 
 #[cfg(test)]
 mod test {
