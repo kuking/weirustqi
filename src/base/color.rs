@@ -1,4 +1,3 @@
-use std::cmp::Eq;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Color {
