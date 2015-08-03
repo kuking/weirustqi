@@ -86,7 +86,7 @@ pub struct CoordParseError(());
 // Tests
 
 #[cfg(test)]
-mod test {
+mod tests {
 
     use std::str::FromStr;
     use super::*;

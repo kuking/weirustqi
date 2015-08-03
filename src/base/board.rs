@@ -94,7 +94,7 @@ impl PartialEq for Board {
 // Tests
 
 #[cfg(test)]
-mod test {
+mod tests {
 
     use std::collections::HashSet;
 

@@ -59,7 +59,20 @@ impl Game {
         }
     }
 
-    pub fn handicap_coords_for(board_size :u8) -> Vec<Coord> {
+    // Mostly game logic below
+
+    pub fn is_valid_move(&self, m :&Move) -> bool {
+        false
+    }
+
+    pub fn play(&self, m :&Move) -> bool {
+        false
+    }
+
+
+    // mostly private
+
+    fn handicap_coords_for(board_size :u8) -> Vec<Coord> {
         // no fast, but this doesn't need to be too fast.
         match board_size {
             19 => vec!( Coord::from_str(&"D4").unwrap(),  Coord::from_str(&"Q16").unwrap(),
@@ -70,9 +83,6 @@ impl Game {
             _ => vec!()
         }
     }
-
-
-    // mostly private
 
     fn set_handicap_stones(board : &mut Board, handicap :usize) {
         let coords = Self::handicap_coords_for(board.size());
@@ -88,7 +98,7 @@ impl Game {
 // Tests
 
 #[cfg(test)]
-mod test {
+mod tests {
 
     use std::str::FromStr;
 
