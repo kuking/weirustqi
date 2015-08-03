@@ -14,7 +14,7 @@ impl FromStr for Move {
     type Err = MoveParseError;
     fn from_str(s :&str) -> Result<Move, Self::Err> {
 
-        if (s.len()<6) {
+        if s.len()<6 {
             return Err(MoveParseError(()))
         }
 
