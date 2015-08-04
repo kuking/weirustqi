@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use std::fmt::{Formatter, Error, Display};
+use std::hash::{Hash, Hasher};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Coord {
@@ -103,6 +104,13 @@ impl Display for Coord {
     }
 }
 
+impl Hash for Coord {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        state.write_u8(self.row);
+        state.write_u8(self.col);
+    }
+}
+
 #[derive(Debug)]
 pub struct CoordParseError(());
 
@@ -114,6 +122,7 @@ pub struct CoordParseError(());
 mod tests {
 
     use std::str::FromStr;
+    use std::collections::HashSet;
     use super::*;
 
     #[test]
@@ -199,6 +208,23 @@ mod tests {
     #[test]
     fn it_adjacents_outside_board() {
         assert_eq!(0, Coord::from_str("T19").unwrap().adjacents(9).len());
+    }
+
+    #[test]
+    fn it_hashes_coords() {
+        let mut h : HashSet<Coord> = HashSet::new();
+        assert_eq!(0, h.len());
+        h.insert(Coord::new(1,2));
+        assert_eq!(1, h.len());
+        // same coord, len is the same
+        h.insert(Coord::new(1,2));
+        assert_eq!(1, h.len());
+        // but another coord will make the set to have two elems
+        h.insert(Coord::new(3,3));
+        assert_eq!(2, h.len());
+        // and another ..
+        h.insert(Coord::new(4,5));
+        assert_eq!(3, h.len());
     }
 
     // benchs
