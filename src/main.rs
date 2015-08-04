@@ -2,6 +2,8 @@ extern crate weirustqi;
 
 use weirustqi::base::board::*;
 use weirustqi::base::coord::*;
+//use weirustqi::base::moves::*;
+//use weirustqi::base::game::*;
 
 use std::str::FromStr;
 
@@ -13,7 +15,6 @@ pub fn main() {
     } else {
         println!("release build")
     }
-
 
     println!("Hello wei-rust-qi");
     let b = Board::new(19);
