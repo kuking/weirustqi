@@ -29,6 +29,28 @@ impl Coord {
         }
         coords
     }
+
+    pub fn adjacents(&self, board_size :u8) -> Vec<Coord> {
+        let row_w = self.row as isize - 1;
+        let row_e = self.row as isize + 1;
+        let col_n = self.col as isize - 1;
+        let col_s = self.col as isize + 1;
+        let mut r : Vec<Coord> = Vec::with_capacity(4);
+        if col_n > 0 {
+            r.push(Coord::new(self.row, col_n as u8));
+        }
+        if col_s < board_size as isize {
+            r.push(Coord::new(self.row, col_s as u8));
+        }
+        if row_w > 0 {
+            r.push(Coord::new(row_w as u8, self.col));
+        }
+        if row_e < board_size as isize {
+            r.push(Coord::new(row_e as u8, self.col));
+        }
+        r
+    }
+
 }
 
 impl FromStr for Coord {
@@ -140,12 +162,48 @@ mod tests {
         }
     }
 
+    #[test]
+    fn it_adjacents() {
+        let adjs = Coord::from_str("D4").unwrap().adjacents(19);
+        assert_eq!(4, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("D3").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("D5").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("C4").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("E4").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_in_bottom_left_corner() {
+        let adjs = Coord::from_str("A1").unwrap().adjacents(19);
+        assert_eq!(2, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("A2").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("B1").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_in_top_right_corner() {
+        let adjs = Coord::from_str("T19").unwrap().adjacents(19);
+        assert_eq!(2, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("S19").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("T18").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_border_case() {
+        assert_eq!(0, Coord::from_str("A1").unwrap().adjacents(1).len());
+    }
+
     // benchs
     use test::Bencher;
 
     #[bench]
     fn bench_from_str(b: &mut Bencher) {
-        b.iter(|| Coord::from_str(&"R19").unwrap() );
+        b.iter(|| Coord::from_str(&"R19").unwrap() )
+    }
+
+    #[bench]
+    fn bench_adjacents(b: &mut Bencher) {
+        b.iter(|| Coord::new(5,0).adjacents(19) )
     }
 
 }
