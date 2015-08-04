@@ -61,12 +61,62 @@ impl Game {
 
     // Mostly game logic below
 
-    pub fn is_valid_move(&self, m :&Move) -> bool {
+    pub fn is_valid(&self, m :&Move) -> bool {
+
+        if self.finished {
+            return false
+        }
+        if let Move::Pass(c) = *m {
+            return self.next_turn == c
+        }
+
+        if let Move::Stone(coord, color) = *m {
+
+            if color != self.next_turn {
+                return false
+            }
+
+            if self.board.get(coord) != Color::Empty {
+                return false
+            }
+
+            return true;
+
+
+        }
+
         false
     }
 
-    pub fn play(&self, m :&Move) -> bool {
+    pub fn play(&mut self, m :Move) -> bool {
+        if self.is_valid(&m) {
+
+            self.state_update_for_move(&m);
+
+            return true
+        }
         false
+    }
+
+    fn state_update_for_move(&mut self, m :&Move) {
+        // it is a given the move is valid
+        self.next_turn = if self.next_turn == Color::Black { Color::White } else { Color::Black };
+
+        // two passes in a row, game is finished
+        if let Move::Pass(_) = *m {
+            if self.moves.len() > 0 {
+                if let Some(&Move::Pass(_)) = self.moves.last() {
+                    self.finished = true;
+                }
+            }
+        }
+
+        // record the move
+        self.moves.push(*m);
+
+        self.board.set_move(*m);
+
+        self.super_ko.insert(self.board.zobrist());
     }
 
 
@@ -105,6 +155,7 @@ mod tests {
     use super::*;
     use base::color::*;
     use base::coord::*;
+    use base::moves::*;
 
     #[test]
     fn it_builds_a_simple_new_game() {
@@ -151,5 +202,51 @@ mod tests {
         assert_eq!(Color::Empty, b.get(Coord::from_str(&"Q4").unwrap()));
     }
 
+    #[test]
+    fn simplest_finished_game() {
+        let mut g = Game::new(19, 5.5, 0);
+        assert!(g.play(Move::from_str("Black D4").unwrap()));
+        assert!(g.play(Move::from_str("White Q16").unwrap()));
+        assert!(g.play(Move::from_str("Black Pass").unwrap()));
+        assert!(!g.finished());
+        assert!(g.play(Move::from_str("White Pass").unwrap()));
+        assert!(g.finished());
+    }
+
+    #[test]
+    fn passing_is_valid_move_but_not_after_game_is_finished() {
+        let mut g = Game::new(19, 5.5, 0);
+        let black_pass = Move::from_str("Black Pass").unwrap();
+        let white_pass = Move::from_str("White Pass").unwrap();
+        // black pass
+        assert!(!g.finished());
+        assert!(g.is_valid(&black_pass));
+        assert!(g.play(black_pass));
+        // white pass
+        assert!(!g.finished());
+        assert!(!g.is_valid(&black_pass)); // black move is not valid anymore
+        assert!(g.is_valid(&white_pass));
+        assert!(g.play(white_pass));
+        // and the game is finish
+        assert!(g.finished());
+        assert!(!g.is_valid(&white_pass));
+        assert!(!g.is_valid(&black_pass));
+    }
+
+    #[test]
+    fn playing_twice_on_same_place_is_not_valid_move() {
+        let mut g = Game::new(19, 5.5, 0);
+        let black_move = Move::from_str("Black D4").unwrap();
+        let black_move2 = Move::from_str("Black D5").unwrap();
+        let white_move = Move::from_str("White Q16").unwrap();
+        let white_move2 = Move::from_str("White Q15").unwrap();
+        assert!(g.play(black_move));
+        assert!(g.play(white_move));
+        assert!(!g.play(black_move));
+        assert!(g.play(black_move2));
+        assert!(!g.play(white_move));
+        assert!(g.play(white_move2));
+
+    }
 
 }
