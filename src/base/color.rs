@@ -21,6 +21,13 @@ impl Color {
     pub fn f(color :&Color) -> u8 {
         *color as u8
     }
+    pub fn opposite(&self) -> Color {
+        match *self {
+            Color::Empty => Color::Empty,
+            Color::Black => Color::White,
+            Color::White => Color::Black
+        }
+    }
 }
 
 impl FromStr for Color {
