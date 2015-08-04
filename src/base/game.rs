@@ -157,6 +157,10 @@ mod tests {
     use base::coord::*;
     use base::moves::*;
 
+    fn assert_color(g :&Game, c :Color, pos :&str) {
+        assert_eq!(c, g.board().get(Coord::from_str(pos).unwrap()));
+    }
+
     #[test]
     fn it_builds_a_simple_new_game() {
         let g = Game::new(19, 5.5, 0);
@@ -180,26 +184,24 @@ mod tests {
     #[test]
     fn handicap_it_sets_stones_in_place() {
         let g = Game::new(19, 0.0, 9);
-        let b = g.board();
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"D4").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q16").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"D16").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q4").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"D10").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q10").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"K4").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"K16").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"K10").unwrap()));
+        assert_color(&g, Color::Black, "D4");
+        assert_color(&g, Color::Black, "Q16");
+        assert_color(&g, Color::Black, "D16");
+        assert_color(&g, Color::Black, "Q4");
+        assert_color(&g, Color::Black, "D10");
+        assert_color(&g, Color::Black, "Q10");
+        assert_color(&g, Color::Black, "K4");
+        assert_color(&g, Color::Black, "K16");
+        assert_color(&g, Color::Black, "K10");
     }
 
     #[test]
     fn handicap_it_sets_stones_in_place_2() {
         let g = Game::new(19, 0.0, 3);
-        let b = g.board();
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"D4").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"Q16").unwrap()));
-        assert_eq!(Color::Black, b.get(Coord::from_str(&"D16").unwrap()));
-        assert_eq!(Color::Empty, b.get(Coord::from_str(&"Q4").unwrap()));
+        assert_color(&g, Color::Black, "D4");
+        assert_color(&g, Color::Black, "Q16");
+        assert_color(&g, Color::Black, "D16");
+        assert_color(&g, Color::Empty, "Q4");
     }
 
     #[test]
