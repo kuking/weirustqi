@@ -248,7 +248,6 @@ mod tests {
         assert!(g.play(black_move2));
         assert!(!g.play(white_move));
         assert!(g.play(white_move2));
-
     }
 
 }
