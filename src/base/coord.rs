@@ -31,6 +31,9 @@ impl Coord {
     }
 
     pub fn adjacents(&self, board_size :u8) -> Vec<Coord> {
+        if self.col > board_size || self.row > board_size {
+            return Vec::with_capacity(0);
+        }
         let row_w = self.row as isize - 1;
         let row_e = self.row as isize + 1;
         let col_n = self.col as isize - 1;
@@ -191,6 +194,11 @@ mod tests {
     #[test]
     fn it_adjacents_border_case() {
         assert_eq!(0, Coord::from_str("A1").unwrap().adjacents(1).len());
+    }
+
+    #[test]
+    fn it_adjacents_outside_board() {
+        assert_eq!(0, Coord::from_str("T19").unwrap().adjacents(9).len());
     }
 
     // benchs
