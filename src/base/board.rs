@@ -34,7 +34,9 @@ impl Board {
             if curr != Color::Empty {
                 self.zobrist = self.zobrist ^ LE_ZOBRISTS[curr as usize][o];
             }
-            self.zobrist = self.zobrist ^ LE_ZOBRISTS[color as usize][o];
+            if color != Color::Empty {
+                self.zobrist = self.zobrist ^ LE_ZOBRISTS[color as usize][o];
+            }
             // position
             self.data[o] = color;
         }
@@ -175,6 +177,7 @@ impl PartialEq for Board {
 #[cfg(test)]
 mod tests {
 
+    use std::str::FromStr;
     use std::collections::HashSet;
 
     use super::*;
@@ -272,6 +275,29 @@ mod tests {
         assert!(Board::new(9).zobrist() != Board::new(11).zobrist());
         assert!(Board::new(11).zobrist() != Board::new(19).zobrist());
         assert!(Board::new(19).zobrist() != Board::new(32).zobrist());
+    }
+
+    #[test]
+    fn it_zorbrist_hash_right_when_emptying_position() {
+        let k10 = Coord::from_str("K10").unwrap();
+        let mut b = Board::new(19);
+
+        let zobrist_0 = b.zobrist();
+
+        b.set_move(Move::Stone( k10, Color::Black ));
+        let zobrist_after_black_K10 = b.zobrist();
+        assert!( zobrist_after_black_K10 != zobrist_0 );
+
+        b.set_move(Move::Stone( k10, Color::White ));
+        let zobrist_after_white_K10 = b.zobrist();
+        assert!( zobrist_after_black_K10 != zobrist_after_white_K10 );
+        assert!( zobrist_after_white_K10 != zobrist_0 );
+
+        b.set_move(Move::Stone( k10, Color::Empty ));
+        let zobrist_after_empty_K10 = b.zobrist();
+        assert!( zobrist_after_empty_K10 != zobrist_after_black_K10);
+        assert!( zobrist_after_empty_K10 != zobrist_after_white_K10);
+        assert!( zobrist_after_empty_K10 == zobrist_0);
     }
 
     #[test]
