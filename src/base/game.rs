@@ -138,6 +138,60 @@ impl Game {
         }
     }
 
+    pub fn pretty_print(&self) -> String {
+        // not the best method, or elegant one, but does the job and it is not meant to be efficient
+        let mut st = String::new();
+        st = st + &"\n";
+        st = st + &format!("    White (O) has captured {} stones\n", self.captured_count(Color::Black)); //because white captures black stones
+        st = st + &format!("    Black (X) has captured {} stones\n", self.captured_count(Color::White));
+        st = st + &"\n";
+        // header row list
+        st = st + &"    ";
+        for i in (0..self.board.size()) {
+            let rowc = if i>8 { (i+1+65) as char } else { (i+65) as char };
+            st = st + &format!("{} ", rowc);
+        }
+        if self.move_count()>0 {
+            st = st + &format!("      Last move: {}", self.moves.last().unwrap());
+        }
+        st = st + &"\n";
+        // rows
+        let markers : Vec<Coord> = Self::markers_coords(self.board.size());
+        for r in (0..self.board.size()) {
+            let row = self.board.size() - r;
+            st = st + &format!("{:3} ", row);
+
+            for c in (0..self.board.size()) {
+                let coord = Coord::new(r,c);
+                let color = self.board.get(&coord);
+                let color_ch = match color {
+                    Color::Empty => if markers.contains(&coord) {'+'} else {'.'},
+                    Color::Black => 'X',
+                    Color::White => 'O'
+                };
+
+                let highlight = self.move_count()>0
+                             && self.moves.last().unwrap().is_stone()
+                             && self.moves.last().unwrap().coord() == coord;
+
+                if highlight {
+                    st = st + &format!("{}({})", 8 as char, color_ch);
+                } else {
+                    st = st + &format!("{} ", color_ch);
+                }
+            }
+            st = st + &format!("{:2}\n", row);
+
+        }
+        // bottom row list
+        st = st + &"    ";
+        for i in (0..self.board.size()) {
+            let rowc = if i>8 { (i+1+65) as char } else { (i+65) as char };
+            st = st + &format!("{} ", rowc);
+        }
+        st + &"\n\n"
+    }
+
 
     // mostly private
 
@@ -151,6 +205,12 @@ impl Game {
                         Coord::from_str(&"K10").unwrap() ),
             _ => vec!()
         }
+    }
+
+    fn markers_coords(board_size :u8) -> Vec<Coord> {
+        // no fast, but this doesn't need to be fast, used only by pretty_print
+        // in the future, when more handicap is added, this will need to be limit to the first 9 in 19x19, etc.
+        Self::handicap_coords_for(board_size)
     }
 
     fn set_handicap_stones(board : &mut Board, handicap :usize) {
