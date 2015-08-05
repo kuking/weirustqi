@@ -285,19 +285,19 @@ mod tests {
         let zobrist_0 = b.zobrist();
 
         b.set_move(Move::Stone( k10, Color::Black ));
-        let zobrist_after_black_K10 = b.zobrist();
-        assert!( zobrist_after_black_K10 != zobrist_0 );
+        let zobrist_after_black_k10 = b.zobrist();
+        assert!( zobrist_after_black_k10 != zobrist_0 );
 
         b.set_move(Move::Stone( k10, Color::White ));
-        let zobrist_after_white_K10 = b.zobrist();
-        assert!( zobrist_after_black_K10 != zobrist_after_white_K10 );
-        assert!( zobrist_after_white_K10 != zobrist_0 );
+        let zobrist_after_white_k10 = b.zobrist();
+        assert!( zobrist_after_black_k10 != zobrist_after_white_k10 );
+        assert!( zobrist_after_white_k10 != zobrist_0 );
 
         b.set_move(Move::Stone( k10, Color::Empty ));
-        let zobrist_after_empty_K10 = b.zobrist();
-        assert!( zobrist_after_empty_K10 != zobrist_after_black_K10);
-        assert!( zobrist_after_empty_K10 != zobrist_after_white_K10);
-        assert!( zobrist_after_empty_K10 == zobrist_0);
+        let zobrist_after_empty_k10 = b.zobrist();
+        assert!( zobrist_after_empty_k10 != zobrist_after_black_k10);
+        assert!( zobrist_after_empty_k10 != zobrist_after_white_k10);
+        assert!( zobrist_after_empty_k10 == zobrist_0);
     }
 
     #[test]

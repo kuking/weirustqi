@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn it_adjacents_right_on_A2() {
+    fn it_adjacents_right_on_a2() {
         let adjs = Coord::from_str("A2").unwrap().adjacents(19);
         assert_eq!(3, adjs.len());
         assert!(adjs.contains(&Coord::from_str("A3").unwrap()));
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn it_adjacents_right_on_Q1() {
+    fn it_adjacents_right_on_q1() {
         let adjs = Coord::from_str("Q1").unwrap().adjacents(19);
         assert_eq!(3, adjs.len());
         assert!(adjs.contains(&Coord::from_str("Q2").unwrap()));
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn it_adjacents_right_on_T10() {
+    fn it_adjacents_right_on_t10() {
         let adjs = Coord::from_str("T10").unwrap().adjacents(19);
         assert_eq!(3, adjs.len());
         assert!(adjs.contains(&Coord::from_str("S10").unwrap()));
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn it_adjacents_right_on_K19() {
+    fn it_adjacents_right_on_k19() {
         let adjs = Coord::from_str("S19").unwrap().adjacents(19);
         assert_eq!(3, adjs.len());
         assert!(adjs.contains(&Coord::from_str("S18").unwrap()));

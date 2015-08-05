@@ -24,7 +24,7 @@ mod game_test {
         assert_eq!(c, g.board().get(&Coord::from_str(pos).unwrap()));
     }
 
-    //#[test]
+    #[test]
     fn simplest_kill() {
         let mut g = Game::new(19, 5.5, 0);
         play_moves(&mut g, vec!(&"Black B1", &"White A1", &"Black A2") );

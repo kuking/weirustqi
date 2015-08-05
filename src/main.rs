@@ -2,13 +2,14 @@ extern crate weirustqi;
 
 //use weirustqi::base::board::*;
 use weirustqi::base::coord::*;
-use weirustqi::base::moves::*;
-use weirustqi::base::game::*;
+//use weirustqi::base::moves::*;
+//use weirustqi::base::game::*;
 
 use std::str::FromStr;
 
 //use weirustqi::base::board;
 
+/*
 fn play_moves(g :&mut Game, moves : Vec<&str>) {
     for m in moves {
         let mo = Move::from_str(m).unwrap();
@@ -24,7 +25,9 @@ fn try_play_invalid_move(g :&mut Game, mov : &str) {
     assert!( !g.play(mo));
     println!("... indeed it failed, so nothing changed");
 }
+*/
 
+/*
 fn check_correct_positions_in_board() {
     let mut g = Game::new(19, 5.5, 0);
     play_moves(&mut g, vec!("black a1", "white a2", "black a3", "white a4", "black a5", "white a6"));
@@ -54,7 +57,7 @@ fn check_ko() {
     play_moves(&mut g, vec!("white d1", "black a1")); // now black can eat again
     try_play_invalid_move(&mut g, "white a2"); // and white can´t eat at A2 because its a KO
 }
-
+*/
 
 pub fn main() {
     if cfg!(debug_assertions) {
@@ -67,7 +70,7 @@ pub fn main() {
 
     //check_correct_positions_in_board();
     //check_eat_four();
-    check_ko();
+    //check_ko();
 
     println!("J18 is {} after Coord::from_str", Coord::from_str(&"j18").unwrap());
 
