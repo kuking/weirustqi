@@ -46,7 +46,6 @@ impl Board {
         }
     }
 
-
     pub fn get(&self, coord :&Coord) -> Color {
         self.data[self.data_offset(coord)]
     }
@@ -94,24 +93,27 @@ impl Board {
         self.find_at_least_one_liberty_internal(&mut paint, self.get(&coord), coord)
     }
 
-    fn count_all_liberties_internal(&self, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> usize {
-        let mut count = 0;
+    fn count_all_liberties_internal(&self, liberties :&mut HashSet<Coord>, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> usize {
         for adj in coord.adjacents(self.size) {
-            if paint.contains(&adj) {
+            let adj_color = self.get(&adj);
+            if adj_color == Color::Empty {
+                liberties.insert(adj);
+            } else if paint.contains(&adj) {
                 break
-            }
-            if self.get(&adj) == our_color {
+            } else if adj_color == our_color {
                 paint.insert(adj);
-                count = count + 1 + self.count_all_liberties_internal(paint, our_color, adj);
+                self.count_all_liberties_internal(liberties, paint, our_color, adj);
             }
         }
-        count
+        liberties.len()
     }
 
     pub fn is_given_coord_last_liberty_for_adj_chain(&self, given :Coord, adj :Coord, adj_color :Color) -> bool {
         let mut paint : HashSet<Coord> = HashSet::new();
-        paint.insert(given);
-        return self.count_all_liberties_internal(&mut paint, adj_color, adj) == 0;
+        let mut liberties : HashSet<Coord> = HashSet::new();
+        paint.insert(adj);
+        liberties.insert(given);
+        return self.count_all_liberties_internal(&mut liberties, &mut paint, adj_color, adj) == 1;
     }
 
     pub fn remove_chain(&mut self, coord : Coord, color : Color) -> usize {
