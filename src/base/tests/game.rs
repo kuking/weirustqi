@@ -118,4 +118,11 @@ mod game_test {
         assert_eq!((1,1), g.captured());
     }
 
+    #[test]
+    fn test_suicide() {
+        let mut g = Game::new(19, 5.5, 0);
+        play_moves(&mut g, vec!("black a2", "white f10", "black b1"));
+        try_play_invalid_move(&mut g, "white a1")
+    }
+
 }
