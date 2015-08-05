@@ -10,6 +10,38 @@ pub enum Move {
     Stone ( Coord, Color )
 }
 
+impl Move {
+
+    pub fn is_pass(&self) -> bool {
+        match *self {
+            Move::Pass(_)    => true,
+            Move::Stone(_,_) => false
+        }
+    }
+
+    pub fn is_stone(&self) -> bool {
+        match *self {
+            Move::Stone(_,_) => true,
+            Move::Pass(_)    => false
+        }
+    }
+
+    pub fn coord(&self) -> Coord {
+        match *self {
+            Move::Stone(coord, _) => coord,
+            Move::Pass(_) => panic!("There is no coordenate in a pass")
+        }
+    }
+
+    pub fn color(&self) -> Color {
+        match *self {
+            Move::Stone(_, color) => color,
+            Move::Pass(color) => color
+        }
+    }
+
+}
+
 impl FromStr for Move {
     type Err = MoveParseError;
     fn from_str(s :&str) -> Result<Move, Self::Err> {
@@ -42,6 +74,7 @@ impl FromStr for Move {
     }
 }
 
+
 impl Display for Move {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match *self {
@@ -67,6 +100,35 @@ mod tests {
     use super::*;
     use base::color::*;
     use base::coord::*;
+
+    #[test]
+    fn is_pass() {
+        assert!(Move::Pass( Color::Black ).is_pass() );
+        assert!(! Move::Stone( Coord::new(1,1), Color::Black ).is_pass());
+    }
+
+    #[test]
+    fn is_stone() {
+        assert!(!Move::Pass( Color::Black ).is_stone());
+        assert!(Move::Stone( Coord::new(1,1), Color::Black ).is_stone());
+    }
+
+    #[test]
+    fn color() {
+        assert_eq!(Color::White, Move::Pass(Color::White).color());
+        assert_eq!(Color::Black, Move::Stone(Coord::new(1,1), Color::Black).color());
+    }
+
+    #[test]
+    fn coord_happy() {
+        assert_eq!(Coord::new(2,3), Move::Stone( Coord::new(2, 3), Color::Black ).coord() )
+    }
+
+    #[test]
+    #[should_panic]
+    fn coord_unhappy() {
+        println!("{:?}",Move::Pass(Color::Black).coord());
+    }
 
     #[test]
     fn it_from_str_happy() {
