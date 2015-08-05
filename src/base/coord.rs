@@ -35,22 +35,22 @@ impl Coord {
         if self.col > board_size || self.row > board_size {
             return Vec::with_capacity(0);
         }
-        let row_w = self.row as isize - 1;
-        let row_e = self.row as isize + 1;
-        let col_n = self.col as isize - 1;
-        let col_s = self.col as isize + 1;
+        let row_n = self.row as isize + 1;
+        let row_s = self.row as isize - 1;
+        let col_w = self.col as isize - 1;
+        let col_e = self.col as isize + 1;
         let mut r : Vec<Coord> = Vec::with_capacity(4);
-        if col_n > 0 {
-            r.push(Coord::new(self.row, col_n as u8));
+        if row_n < board_size as isize {
+            r.push(Coord::new(row_n as u8, self.col));
         }
-        if col_s < board_size as isize {
-            r.push(Coord::new(self.row, col_s as u8));
+        if row_s >= 0 {
+            r.push(Coord::new(row_s as u8, self.col));
         }
-        if row_w > 0 {
-            r.push(Coord::new(row_w as u8, self.col));
+        if col_e < board_size as isize {
+            r.push(Coord::new(self.row,  col_e as u8));
         }
-        if row_e < board_size as isize {
-            r.push(Coord::new(row_e as u8, self.col));
+        if col_w >= 0 {
+            r.push(Coord::new(self.row,  col_w as u8));
         }
         r
     }
@@ -198,6 +198,42 @@ mod tests {
         assert_eq!(2, adjs.len());
         assert!(adjs.contains(&Coord::from_str("S19").unwrap()));
         assert!(adjs.contains(&Coord::from_str("T18").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_right_on_A2() {
+        let adjs = Coord::from_str("A2").unwrap().adjacents(19);
+        assert_eq!(3, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("A3").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("A1").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("B2").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_right_on_Q1() {
+        let adjs = Coord::from_str("Q1").unwrap().adjacents(19);
+        assert_eq!(3, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("Q2").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("P1").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("R1").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_right_on_T10() {
+        let adjs = Coord::from_str("T10").unwrap().adjacents(19);
+        assert_eq!(3, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("S10").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("T11").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("T9").unwrap()));
+    }
+
+    #[test]
+    fn it_adjacents_right_on_K19() {
+        let adjs = Coord::from_str("S19").unwrap().adjacents(19);
+        assert_eq!(3, adjs.len());
+        assert!(adjs.contains(&Coord::from_str("S18").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("T19").unwrap()));
+        assert!(adjs.contains(&Coord::from_str("R19").unwrap()));
     }
 
     #[test]
