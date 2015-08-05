@@ -1,6 +1,9 @@
+extern crate rand;
+
 use std::str::FromStr;
 use std::fmt::{Formatter, Error, Display};
 use std::hash::{Hash, Hasher};
+use rand::Rng;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Coord {
@@ -19,6 +22,12 @@ impl Coord {
 
     pub fn new_us(le_row :usize, le_col :usize) -> Self {
         Self::new(le_row as u8, le_col as u8)
+    }
+
+    pub fn random(board_size :usize) -> Self {
+        let bs8 = board_size as u8;
+        let mut rng = rand::thread_rng();
+        Self::new(rng.gen::<u8>() % bs8, rng.gen::<u8>() % bs8)
     }
 
     pub fn all_possibles(board_size :usize) -> Vec<Self> {

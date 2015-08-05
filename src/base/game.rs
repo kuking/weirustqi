@@ -110,7 +110,7 @@ impl Game {
                 mock_board.set_move(m);
                 if self.super_ko.contains(&mock_board.zobrist()) {
                     // SUPERKO!
-                    println!("superko!");
+                    // println!("superko!");
                     return false;
                 }
                 self.board = mock_board;
@@ -186,7 +186,15 @@ impl Game {
                     st = st + &format!("{} ", color_ch);
                 }
             }
-            st = st + &format!("{:2}\n", row);
+            st = st + &format!("{:2}", row);
+            if row == self.board.size() {
+                st = st + &format!("    Move No: {}", self.move_count());
+            } else if row == self.board.size() - 2 {
+                st = st + &format!("    Black out: {} (White captured)", self.captured_count(Color::Black));
+            } else if row == self.board.size() - 3 {
+                st = st + &format!("    White out: {} (Black captured)", self.captured_count(Color::White));
+            }
+            st = st + "\n"
 
         }
         // bottom row list
@@ -345,6 +353,51 @@ mod tests {
         assert!(g.play(black_move2));
         assert!(!g.play(white_move));
         assert!(g.play(white_move2));
+    }
+
+    //
+    // benchs for vec board
+    //
+    use test::Bencher;
+
+    fn play_random_game(board_size :usize) {
+        let mut g = Game::new(board_size, 5.5, 0);
+        while !g.finished() && g.move_count() < board_size*board_size {
+            let mut count = 0;
+            let turn_color = g.next_turn();
+            loop {
+                let m = Move::Stone( Coord::random(board_size), turn_color);
+                if g.play(m) {
+                    break;
+                }
+                count = count + 1;
+                if count > board_size*2 {
+                    g.play(Move::Pass(turn_color));
+                    break;
+                }
+            }
+        }
+    }
+
+    #[bench]
+    fn play_random_19x19(b: &mut Bencher) {
+        b.iter(|| {
+            play_random_game(19)
+        })
+    }
+
+    #[bench]
+    fn play_random_11x11(b: &mut Bencher) {
+        b.iter(|| {
+            play_random_game(11)
+        })
+    }
+
+    #[bench]
+    fn play_random_9x9(b: &mut Bencher) {
+        b.iter(|| {
+            play_random_game(9)
+        })
     }
 
 }

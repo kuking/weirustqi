@@ -2,8 +2,8 @@ extern crate weirustqi;
 
 //use weirustqi::base::board::*;
 use weirustqi::base::coord::*;
-//use weirustqi::base::moves::*;
-//use weirustqi::base::game::*;
+use weirustqi::base::moves::*;
+use weirustqi::base::game::*;
 
 use std::str::FromStr;
 
@@ -59,6 +59,28 @@ fn check_ko() {
 }
 */
 
+fn play_random_game() {
+    let board_size = 19;
+    let mut g = Game::new(board_size, 5.5, 0);
+
+    while !g.finished() && g.move_count() < board_size*board_size {
+        let mut count = 0;
+        let turn_color = g.next_turn();
+        loop {
+            let m = Move::Stone( Coord::random(board_size), turn_color);
+            if g.play(m) {
+                break;
+            }
+            count = count + 1;
+            if count > board_size*2 {
+                g.play(Move::Pass(turn_color));
+                break;
+            }
+        }
+        println!("{}", g.pretty_print());
+    }
+}
+
 pub fn main() {
     if cfg!(debug_assertions) {
         println!("debug build")
@@ -71,6 +93,8 @@ pub fn main() {
     //check_correct_positions_in_board();
     //check_eat_four();
     //check_ko();
+    play_random_game();
+
 
     println!("J18 is {} after Coord::from_str", Coord::from_str(&"j18").unwrap());
 
