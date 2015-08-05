@@ -1,9 +1,9 @@
 extern crate weirustqi;
 
-use weirustqi::base::board::*;
+//use weirustqi::base::board::*;
 use weirustqi::base::coord::*;
 //use weirustqi::base::moves::*;
-//use weirustqi::base::game::*;
+use weirustqi::base::game::*;
 
 use std::str::FromStr;
 
@@ -17,8 +17,10 @@ pub fn main() {
     }
 
     println!("Hello wei-rust-qi");
-    let b = Board::new(19);
-    println!("{}", b);
+
+
+    let g = Game::new(19, 5.5, 0);
+    println!("{}", g);
 
     println!("J18 is {} after Coord::from_str", Coord::from_str(&"j18").unwrap());
 
