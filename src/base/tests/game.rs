@@ -15,6 +15,11 @@ mod game_test {
         }
     }
 
+    fn try_play_invalid_move(g :&mut Game, mov : &str) {
+        let mo = Move::from_str(mov).unwrap();
+        assert!( !g.play(mo));
+    }
+
     fn assert_color(g :&Game, c :Color, pos :&str) {
         assert_eq!(c, g.board().get(&Coord::from_str(pos).unwrap()));
     }
@@ -82,7 +87,7 @@ mod game_test {
         assert_eq!(6, g.captured_count(Color::Black));
     }
 
-    //#[test]
+    #[test]
     fn basic_ko() {
         /*
         *  5 . . . . . . . . .
@@ -94,13 +99,23 @@ mod game_test {
         */
         let mut g = Game::new(19, 5.5, 0);
 
-        play_moves(&mut g, vec!("black a1", "white b1", "black a3", "white c1", "black b2",
-                                "white a2")); // eat, valid.
-        assert!(!g.play(Move::from_str("black a1").unwrap())); // invalid, ko
+        play_moves(&mut g, vec!("black a1", "white b1", "black a3", "white c1", "black b2", "white a2")); // eat, valid.
+        assert_eq!((1,0), g.captured());
+
+        try_play_invalid_move(&mut g, "black a1");
         play_moves(&mut g, vec!("black b3"));
-        assert!(g.play(Move::from_str("white a1").unwrap())); // white can finish ko
-        play_moves(&mut g, vec!("white d1", "black a1")); // now black can eat again
-        assert!(!g.play(Move::from_str("white a2").unwrap())); // and white can´t eat at A2 because its a KO
+
+        // two variants
+        let mut g2 = g.clone();
+
+        // variant: white finishes the ko
+        play_moves(&mut g2, vec!("white a1"));
+        assert_eq!((1,0), g.captured());
+
+        // variant: white plays somewhere else, black can play in the eye (ex ko) again
+        play_moves(&mut g, vec!("white d1", "black a1")); // now black can eat again, because w-d1
+        try_play_invalid_move(&mut g, "white a2");// and white can´t eat at A2 because its a KO
+        assert_eq!((1,1), g.captured());
     }
 
 }

@@ -9,7 +9,7 @@ use base::moves::*;
 use base::coord::*;
 use base::board::*;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Game {
     board    : Board,
     komi     : f32,
@@ -60,6 +60,10 @@ impl Game {
         }
     }
 
+    pub fn captured(&self) -> (u16, u16) {
+        (self.captured_black, self.captured_white)
+    }
+
     // Mostly game logic below
 
     pub fn play(&mut self, m :Move) -> bool {
@@ -72,7 +76,7 @@ impl Game {
             if c != self.next_turn {
                 return false
             }
-            self.state_update_for_move(&m);
+            self.state_update_for_move(&m, 0);
             return true;
         }
 
@@ -86,34 +90,47 @@ impl Game {
                 return false
             }
 
+            let mut mock_board = self.board.clone();
+
             let opposite_color = self.next_turn.opposite();
-            let mut as_kill = false;
-            for adj in self.board.adjacents_by_color(&coord, &opposite_color) {
-                //println!("is_given_coord_last_liberty_for_adj_chain {}, {}, {} = {}", coord, adj, opposite_color, self.board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color));
-                if self.board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color) {
-                    let captured = self.board.remove_chain(adj, opposite_color);
-                    self.account_captured(captured);
-                    as_kill = true;
+            let mut captured = 0;
+
+            //println!(" all adj for {} are {:?} ", &coord, &coord.adjacents(self.board.size()) );
+            for adj in mock_board.adjacents_by_color(&coord, &opposite_color) {
+                //println!("is_given_coord_last_liberty_for_adj_chain {}, {}, {} = {}", coord, adj, opposite_color, mock_board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color));
+                if mock_board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color) {
+                    captured = captured + mock_board.remove_chain(adj, opposite_color);
                 }
             }
-            if as_kill {
-                self.state_update_for_move(&m);
-                return true
-            }
 
-            if self.board.adjacents_by_color(&coord, &Color::Empty).len()>0 { //FIXME: this can be more efficient
-                self.state_update_for_move(&m);
-                return true
-            }
+            // could place stone?
+            if mock_board.adjacents_by_color(&coord, &Color::Empty).len()>0 || mock_board.given_move_will_live(m) {
+                //println!("im playing apparently... {} with captured {}", &m, captured);
+                //println!("superkos are {:?} and myself is {}", self.super_ko, &mock_board.zobrist());
+                mock_board.set_move(m);
+                if self.super_ko.contains(&mock_board.zobrist()) {
+                    // SUPERKO!
+                    println!("superko!");
+                    return false;
+                }
+                self.board = mock_board;
+                self.state_update_for_move(&m, captured);
 
+                return true;
+            }
         }
-
         false
     }
 
-    fn state_update_for_move(&mut self, m :&Move) {
+    fn state_update_for_move(&mut self, m :&Move, captured :usize) {
         // it is a given the move is valid
-        self.next_turn = if self.next_turn == Color::Black { Color::White } else { Color::Black };
+        self.next_turn = self.next_turn.opposite();
+        // captured
+        match self.next_turn { // white kills, so 'blacks' are captured
+            Color::White => self.captured_white = self.captured_white + captured as u16,
+            Color::Black => self.captured_black = self.captured_black + captured as u16,
+            Color::Empty => panic!("It should never be the turn for 'empty'")
+        }
         // two passes in a row, game is finished
         if let Move::Pass(_) = *m {
             if self.moves.len() > 0 {
@@ -124,16 +141,7 @@ impl Game {
         }
         // record the move
         self.moves.push(*m);
-        self.board.set_move(*m);
         self.super_ko.insert(self.board.zobrist());
-    }
-
-    fn account_captured(&mut self, captured :usize) {
-        match self.next_turn.opposite() {
-            Color::White => self.captured_white = self.captured_white + captured as u16,
-            Color::Black => self.captured_black = self.captured_black + captured as u16,
-            Color::Empty => panic!("It should never be the turn for 'empty'")
-        }
     }
 
     pub fn pretty_print(&self) -> String {
