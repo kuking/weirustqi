@@ -68,27 +68,27 @@ impl FromStr for Coord {
 
         let mut chars = s.chars();
 
-        // row
-        let row : u8;
-        if let Some(rowc) = chars.next() {
+        // col
+        let col : u8;
+        if let Some(colc) = chars.next() {
             // the following might look awkard but it is X3 faster than string mangling.
-            let rowno = if rowc>='a' && rowc<='z' { rowc as u32 - 32 } else { rowc as u32 };
-            if rowno<'A' as u32 || rowno>'Z' as u32 || rowno == 'I' as u32 {
+            let colno = if colc>='a' && colc<='z' { colc as u32 - 32 } else { colc as u32 };
+            if colno<'A' as u32 || colno>'Z' as u32 || colno == 'I' as u32 {
                 return Err(CoordParseError(()))
             }
-            if rowno > 'I' as u32 {
-                row = (rowno - 'A' as u32 - 1) as u8;
+            if colno > 'I' as u32 {
+                col = (colno - 'A' as u32 - 1) as u8;
             } else {
-                row = (rowno - 'A' as u32) as u8;
+                col = (colno - 'A' as u32) as u8;
             }
         } else {
             return Err(CoordParseError(()))
         }
 
         // col
-        let col : u8;
+        let row : u8;
         match u8::from_str(&s[1..]) {
-            Ok(coln) => col = coln - 1,
+            Ok(rown) => row = rown - 1,
             Err(_) => return Err(CoordParseError(()))
         }
 
@@ -99,8 +99,8 @@ impl FromStr for Coord {
 
 impl Display for Coord {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        let rowc = if self.row>8 { (self.row+1+65) as char } else { (self.row+65) as char };
-        f.write_fmt(format_args!("{}{}", rowc, self.col+1))
+        let colc = if self.col>8 { (self.col+1+65) as char } else { (self.col+65) as char };
+        f.write_fmt(format_args!("{}{}", colc, self.row+1))
     }
 }
 
@@ -142,7 +142,7 @@ mod tests {
     #[test]
     fn it_from_str_happy() {
         match Coord::from_str(&"A2") {
-            Ok(c)  => assert_eq!(Coord::new(0,1), c),
+            Ok(c)  => assert_eq!(Coord::new(1,0), c),
             Err(_) => panic!("Coord::form_str('A2') should be fine")
         }
     }

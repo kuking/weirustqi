@@ -90,6 +90,8 @@ impl Game {
             for adj in self.board.adjacents_by_color(&coord, &opposite_color) {
                 let mut as_kill = false;
 
+                //println!("is_given_coord_last_liberty_for_adj_chain {}, {}, {} = {}", coord, adj, opposite_color, self.board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color));
+
                 if self.board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color) {
                     let captured = self.board.remove_chain(adj, opposite_color);
                     self.account_captured(captured);
@@ -102,8 +104,9 @@ impl Game {
 
             }
 
+            //println!("adjacents_by_color empty {:?}", self.board.adjacents_by_color(&coord, &Color::Empty));
+
             if self.board.adjacents_by_color(&coord, &Color::Empty).len()>0 { //FIXME: this can be more efficient
-                self.board.set_move(m);
                 self.state_update_for_move(&m);
                 return true
             }
@@ -162,7 +165,7 @@ impl Game {
             st = st + &format!("{:3} ", row);
 
             for c in (0..self.board.size()) {
-                let coord = Coord::new(r,c);
+                let coord = Coord::new(row-1,c);
                 let color = self.board.get(&coord);
                 let color_ch = match color {
                     Color::Empty => if markers.contains(&coord) {'+'} else {'.'},
