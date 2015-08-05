@@ -1,6 +1,5 @@
 use std::fmt::{Display, Formatter, Error};
 use std::hash::{Hash, Hasher};
-use std::collections::HashSet;
 
 use base::color::*;
 use base::moves::*;
@@ -57,7 +56,7 @@ impl Board {
     }
 
     // TODO: TEST
-    fn find_at_least_one_liberty_internal(&self, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> bool {
+    fn find_at_least_one_liberty_internal(&self, paint :&mut Vec<Coord>, our_color :Color, coord : Coord) -> bool {
         // assumes current coord is already in the set and our color
         for adj in coord.adjacents(self.size) {
             if !paint.contains(&adj) {
@@ -65,7 +64,7 @@ impl Board {
                 if adj_col == Color::Empty {
                     return true
                 } else if adj_col == our_color {
-                    paint.insert(adj);
+                    paint.push(adj);
                     if self.find_at_least_one_liberty_internal(paint, our_color, adj) {
                         return true;
                     }
@@ -80,8 +79,8 @@ impl Board {
         match m {
             Move::Pass(_)  => false,
             Move::Stone(coord, color) => {
-                let mut paint : HashSet<Coord> = HashSet::new();
-                paint.insert (coord);
+                let mut paint : Vec<Coord> = Vec::with_capacity(self.size as usize);
+                paint.push (coord);
                 self.find_at_least_one_liberty_internal(&mut paint, color, coord)
             }
         }
@@ -89,8 +88,8 @@ impl Board {
 
     // TODO: TEST
     pub fn is_given_coord_last_liberty_for_adj_chain(&self, given :Coord, adj: Coord, adj_color :Color) -> bool {
-        let mut paint : HashSet<Coord> = HashSet::new();
-        paint.insert(given);
+        let mut paint : Vec<Coord> = Vec::with_capacity(self.size as usize);
+        paint.push(given);
         !self.find_at_least_one_liberty_internal(&mut paint, adj_color, adj)
     }
 
