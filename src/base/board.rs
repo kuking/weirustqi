@@ -56,27 +56,26 @@ impl Board {
         center.adjacents(self.size).into_iter().filter(|c|self.get(&c) == *color).collect()
     }
 
-    // TODO: TEST, AS I'M NOT SURE IF THIS WILL END UP BEING USED
+    // TODO: TEST
     fn find_at_least_one_liberty_internal(&self, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> bool {
         // assumes current coord is already in the set and our color
-       for adj in coord.adjacents(self.size) {
-           if paint.contains(&adj) {
-               break;
-           }
-           let adj_col = self.get(&adj);
-           if adj_col == Color::Empty {
-               return true
-           } else if adj_col == our_color {
-               paint.insert(adj);
-               if self.find_at_least_one_liberty_internal(paint, our_color, adj) {
-                   return true;
-               }
-           }
-       }
-       false
+        for adj in coord.adjacents(self.size) {
+            if !paint.contains(&adj) {
+                let adj_col = self.get(&adj);
+                if adj_col == Color::Empty {
+                    return true
+                } else if adj_col == our_color {
+                    paint.insert(adj);
+                    if self.find_at_least_one_liberty_internal(paint, our_color, adj) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
     }
 
-    // TODO: TEST IM NOT SURE IF THIS WILL SURVIVE
+    // TODO: TEST
     pub fn given_move_will_live(&self, m :Move) -> bool {
         match m {
             Move::Pass(_)  => false,
@@ -88,34 +87,11 @@ impl Board {
         }
     }
 
-    // TODO: TEST IM NOT SURE IF THIS WILL SURVIVE
-    pub fn find_at_lest_one_liberty(&self, coord :Coord) -> bool {
+    // TODO: TEST
+    pub fn is_given_coord_last_liberty_for_adj_chain(&self, given :Coord, adj: Coord, adj_color :Color) -> bool {
         let mut paint : HashSet<Coord> = HashSet::new();
-        paint.insert(coord);
-        self.find_at_least_one_liberty_internal(&mut paint, self.get(&coord), coord)
-    }
-
-    fn count_all_liberties_internal(&self, liberties :&mut HashSet<Coord>, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> usize {
-        for adj in coord.adjacents(self.size) {
-            let adj_color = self.get(&adj);
-            if adj_color == Color::Empty {
-                liberties.insert(adj);
-            } else if paint.contains(&adj) {
-                break
-            } else if adj_color == our_color {
-                paint.insert(adj);
-                self.count_all_liberties_internal(liberties, paint, our_color, adj);
-            }
-        }
-        liberties.len()
-    }
-
-    pub fn is_given_coord_last_liberty_for_adj_chain(&self, given :Coord, adj :Coord, adj_color :Color) -> bool {
-        let mut paint : HashSet<Coord> = HashSet::new();
-        let mut liberties : HashSet<Coord> = HashSet::new();
-        paint.insert(adj);
-        liberties.insert(given);
-        return self.count_all_liberties_internal(&mut liberties, &mut paint, adj_color, adj) == 1;
+        paint.insert(given);
+        !self.find_at_least_one_liberty_internal(&mut paint, adj_color, adj)
     }
 
     pub fn remove_chain(&mut self, coord : Coord, color : Color) -> usize {
