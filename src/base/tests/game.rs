@@ -16,7 +16,7 @@ mod game_test {
     }
 
     fn assert_color(g :&Game, c :Color, pos :&str) {
-        assert_eq!(c, g.board().get(Coord::from_str(pos).unwrap()));
+        assert_eq!(c, g.board().get(&Coord::from_str(pos).unwrap()));
     }
 
     //#[test]
@@ -24,11 +24,11 @@ mod game_test {
         let mut g = Game::new(19, 5.5, 0);
         play_moves(&mut g, vec!(&"Black B1", &"White A1", &"Black A2") );
 
-        assert_eq!(Color::Empty, g.board().get(Coord::from_str("A1").unwrap()));
-        assert_eq!(1, g.dead_count(Color::White));
+        assert_eq!(Color::Empty, g.board().get(&Coord::from_str("A1").unwrap()));
+        assert_eq!(1, g.captured_count(Color::White));
     }
 
-    //#[test]
+    #[test]
     fn four_kills() {
         /*
            A B C D E F G H J K L M N O P Q R S T
@@ -62,8 +62,8 @@ mod game_test {
         assert_color(&g, Color::Empty, "j9");
         assert_color(&g, Color::Empty, "j10");
         assert_color(&g, Color::Empty, "k9");
-        assert_eq!(0, g.dead_count(Color::White));
-        assert_eq!(4, g.dead_count(Color::Black));
+        assert_eq!(0, g.captured_count(Color::White));
+        assert_eq!(4, g.captured_count(Color::Black));
     }
 
     //#[test]
@@ -78,8 +78,8 @@ mod game_test {
         assert_color(&g, Color::Empty, "j9");
         assert_color(&g, Color::White, "j10");
         assert_color(&g, Color::White, "k9");
-        assert_eq!(0, g.dead_count(Color::White));
-        assert_eq!(6, g.dead_count(Color::Black));
+        assert_eq!(0, g.captured_count(Color::White));
+        assert_eq!(6, g.captured_count(Color::Black));
     }
 
     //#[test]
@@ -96,9 +96,9 @@ mod game_test {
 
         play_moves(&mut g, vec!("black a1", "white b1", "black a3", "white c1", "black b2",
                                 "white a2")); // eat, valid.
-        assert!(!g.is_valid(&Move::from_str("black a1").unwrap())); // invalid, ko
+        assert!(!g.play(Move::from_str("black a1").unwrap())); // invalid, ko
         play_moves(&mut g, vec!("black b3"));
-        assert!(g.is_valid(&Move::from_str("white a1").unwrap())); // white can finish ko
+        assert!(g.play(Move::from_str("white a1").unwrap())); // white can finish ko
         play_moves(&mut g, vec!("white d1", "black a1")); // now black can eat again
         assert!(!g.play(Move::from_str("white a2").unwrap())); // and white can´t eat at A2 because its a KO
     }
