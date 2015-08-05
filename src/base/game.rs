@@ -1,7 +1,8 @@
+use std::fmt::{Display, Formatter, Error};
+use std::str::FromStr;
 
 use std::collections::HashSet;
 
-use std::str::FromStr;
 
 use base::color::*;
 use base::moves::*;
@@ -13,8 +14,8 @@ pub struct Game {
     board    : Board,
     komi     : f32,
     handicap : u16,
-    black_dead : u16,
-    white_dead : u16,
+    captured_black : u16,
+    captured_white : u16,
     next_turn : Color,
     finished : bool,
     super_ko : HashSet<u64>,
@@ -32,8 +33,8 @@ impl Game {
             board : le_board,
             komi : komi,
             handicap : handicap as u16,
-            black_dead : 0,
-            white_dead : 0,
+            captured_black : 0,
+            captured_white : 0,
             next_turn : if handicap>0 {Color::White} else {Color::Black},
             finished : false,
             super_ko : HashSet::new(),
@@ -51,57 +52,70 @@ impl Game {
     pub fn move_count(&self) -> usize { self.moves.len() }
     pub fn finished(&self) -> bool { self.finished }
 
-    pub fn dead_count(&self, color : Color) -> u16 {
+    pub fn captured_count(&self, color : Color) -> u16 {
         match color {
-            Color::White => self.white_dead,
-            Color::Black => self.black_dead,
+            Color::White => self.captured_white,
+            Color::Black => self.captured_black,
             Color::Empty => panic!("No dead count for empty intersection")
         }
     }
 
     // Mostly game logic below
 
-    pub fn is_valid(&self, m :&Move) -> bool {
+    pub fn play(&mut self, m :Move) -> bool {
 
         if self.finished {
             return false
         }
-        if let Move::Pass(c) = *m {
-            return self.next_turn == c
+
+        if let Move::Pass(c) = m {
+            if c != self.next_turn {
+                return false
+            }
+            self.state_update_for_move(&m);
+            return true;
         }
 
-        if let Move::Stone(coord, color) = *m {
+        if let Move::Stone(coord, color) = m {
 
             if color != self.next_turn {
                 return false
             }
 
-            if self.board.get(coord) != Color::Empty {
+            if self.board.get(&coord) != Color::Empty {
                 return false
             }
 
-            return true;
+            let opposite_color = self.next_turn.opposite();
+            for adj in self.board.adjacents_by_color(&coord, &opposite_color) {
+                let mut as_kill = false;
 
+                if self.board.is_given_coord_last_liberty_for_adj_chain(coord, adj, opposite_color) {
+                    let captured = self.board.remove_chain(adj, opposite_color);
+                    self.account_captured(captured);
+                    as_kill = true;
+                }
+                if as_kill {
+                    self.state_update_for_move(&m);
+                    return true
+                }
+
+            }
+
+            if self.board.adjacents_by_color(&coord, &Color::Empty).len()>0 { //FIXME: this can be more efficient
+                self.board.set_move(m);
+                self.state_update_for_move(&m);
+                return true
+            }
 
         }
 
-        false
-    }
-
-    pub fn play(&mut self, m :Move) -> bool {
-        if self.is_valid(&m) {
-
-            self.state_update_for_move(&m);
-
-            return true
-        }
         false
     }
 
     fn state_update_for_move(&mut self, m :&Move) {
         // it is a given the move is valid
         self.next_turn = if self.next_turn == Color::Black { Color::White } else { Color::Black };
-
         // two passes in a row, game is finished
         if let Move::Pass(_) = *m {
             if self.moves.len() > 0 {
@@ -110,13 +124,18 @@ impl Game {
                 }
             }
         }
-
         // record the move
         self.moves.push(*m);
-
         self.board.set_move(*m);
-
         self.super_ko.insert(self.board.zobrist());
+    }
+
+    fn account_captured(&mut self, captured :usize) {
+        match self.next_turn.opposite() {
+            Color::White => self.captured_white = self.captured_white + captured as u16,
+            Color::Black => self.captured_black = self.captured_black + captured as u16,
+            Color::Empty => panic!("It should never be the turn for 'empty'")
+        }
     }
 
 
@@ -144,6 +163,19 @@ impl Game {
 
 }
 
+impl Display for Game {
+    fn fmt(&self, fmt : &mut Formatter) -> Result<(), Error> {
+        fmt.write_fmt(format_args!("({}x{}#{} k={:2} h={} cb={} cw={} #{:x})",
+            self.board().size(), self.board().size(),
+            self.move_count(),
+            self.komi,
+            self.handicap,
+            self.captured_black, self.captured_white,
+            self.board.zobrist()))
+    }
+}
+
+
 // *********************************************************************************************
 // Tests
 
@@ -158,7 +190,7 @@ mod tests {
     use base::moves::*;
 
     fn assert_color(g :&Game, c :Color, pos :&str) {
-        assert_eq!(c, g.board().get(Coord::from_str(pos).unwrap()));
+        assert_eq!(c, g.board().get(&Coord::from_str(pos).unwrap()));
     }
 
     #[test]
@@ -167,8 +199,8 @@ mod tests {
         assert_eq!(19, g.board().size());
         assert_eq!(5.5, g.komi());
         assert_eq!(0, g.handicap());
-        assert_eq!(0, g.dead_count(Color::Black));
-        assert_eq!(0, g.dead_count(Color::White));
+        assert_eq!(0, g.captured_count(Color::Black));
+        assert_eq!(0, g.captured_count(Color::White));
         assert_eq!(Color::Black, g.next_turn());
         assert_eq!(0, g.move_count());
         assert!(g.moves().is_empty());
@@ -222,17 +254,16 @@ mod tests {
         let white_pass = Move::from_str("White Pass").unwrap();
         // black pass
         assert!(!g.finished());
-        assert!(g.is_valid(&black_pass));
+        assert!(!g.play(white_pass));
         assert!(g.play(black_pass));
         // white pass
         assert!(!g.finished());
-        assert!(!g.is_valid(&black_pass)); // black move is not valid anymore
-        assert!(g.is_valid(&white_pass));
+        assert!(!g.play(black_pass)); // black move is not valid anymore
         assert!(g.play(white_pass));
         // and the game is finish
         assert!(g.finished());
-        assert!(!g.is_valid(&white_pass));
-        assert!(!g.is_valid(&black_pass));
+        assert!(!g.play(white_pass));
+        assert!(!g.play(black_pass));
     }
 
     #[test]

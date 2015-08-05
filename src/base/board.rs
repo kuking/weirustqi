@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Error};
 use std::hash::{Hash, Hasher};
+use std::collections::HashSet;
 
 use base::color::*;
 use base::moves::*;
@@ -27,7 +28,7 @@ impl Board {
 
     pub fn set_move(&mut self, m :Move) {
         if let Move::Stone(coord, color) = m {
-            let o = self.data_offset(coord);
+            let o = self.data_offset(&coord);
             //zobrist
             let curr = self.data[o];
             if curr != Color::Empty {
@@ -46,13 +47,89 @@ impl Board {
     }
 
 
-    pub fn get(&self, coord :Coord) -> Color {
+    pub fn get(&self, coord :&Coord) -> Color {
         self.data[self.data_offset(coord)]
+    }
 
+    pub fn adjacents_by_color(&self, center :&Coord, color :&Color) -> Vec<Coord> {
+        center.adjacents(self.size).into_iter().filter(|c|self.get(&c) == *color).collect()
+    }
+
+    // TODO: TEST, AS I'M NOT SURE IF THIS WILL END UP BEING USED
+    fn find_at_least_one_liberty_internal(&self, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> bool {
+        // assumes current coord is already in the set and our color
+       for adj in coord.adjacents(self.size) {
+           if paint.contains(&adj) {
+               break;
+           }
+           let adj_col = self.get(&adj);
+           if adj_col == Color::Empty {
+               return true
+           } else if adj_col == our_color {
+               paint.insert(adj);
+               if self.find_at_least_one_liberty_internal(paint, our_color, adj) {
+                   return true;
+               }
+           }
+       }
+       false
+    }
+
+    // TODO: TEST IM NOT SURE IF THIS WILL SURVIVE
+    pub fn given_move_will_live(&self, m :Move) -> bool {
+        match m {
+            Move::Pass(_)  => false,
+            Move::Stone(coord, color) => {
+                let mut paint : HashSet<Coord> = HashSet::new();
+                paint.insert (coord);
+                self.find_at_least_one_liberty_internal(&mut paint, color, coord)
+            }
+        }
+    }
+
+    // TODO: TEST IM NOT SURE IF THIS WILL SURVIVE
+    pub fn find_at_lest_one_liberty(&self, coord :Coord) -> bool {
+        let mut paint : HashSet<Coord> = HashSet::new();
+        paint.insert(coord);
+        self.find_at_least_one_liberty_internal(&mut paint, self.get(&coord), coord)
+    }
+
+    fn count_all_liberties_internal(&self, paint :&mut HashSet<Coord>, our_color :Color, coord : Coord) -> usize {
+        let mut count = 0;
+        for adj in coord.adjacents(self.size) {
+            if paint.contains(&adj) {
+                break
+            }
+            if self.get(&adj) == our_color {
+                paint.insert(adj);
+                count = count + 1 + self.count_all_liberties_internal(paint, our_color, adj);
+            }
+        }
+        count
+    }
+
+    pub fn is_given_coord_last_liberty_for_adj_chain(&self, given :Coord, adj :Coord, adj_color :Color) -> bool {
+        let mut paint : HashSet<Coord> = HashSet::new();
+        paint.insert(given);
+        return self.count_all_liberties_internal(&mut paint, adj_color, adj) == 0;
+    }
+
+    pub fn remove_chain(&mut self, coord : Coord, color : Color) -> usize {
+        if self.get(&coord) != color {
+            return 0;
+        }
+        let mut count = 1;
+        self.set_move( Move::Stone(coord, Color::Empty) );
+        for adj in coord.adjacents(self.size) {
+            if self.get(&adj) == color {
+                count = count + self.remove_chain(adj, color);
+            }
+        }
+        count
     }
 
     #[inline]
-    fn data_offset(&self, coord : Coord) -> usize {
+    fn data_offset(&self, coord : &Coord) -> usize {
         debug_assert!(coord.row < self.size || coord.row < self.size);
         coord.row as usize * self.size as usize + coord.col as usize
     }
@@ -122,16 +199,16 @@ mod tests {
         let coord = Coord::new(2,3);
         let mut board = Board::new(32);
 
-        assert_eq!(Color::Empty, board.get(coord));
+        assert_eq!(Color::Empty, board.get(&coord));
 
         board.set_move(Move::Stone(coord, Color::White));
-        assert_eq!(Color::White, board.get(coord));
+        assert_eq!(Color::White, board.get(&coord));
 
         board.set_move(Move::Stone(coord, Color::Black));
-        assert_eq!(Color::Black, board.get(coord));
+        assert_eq!(Color::Black, board.get(&coord));
 
         board.set_move(Move::Stone(coord, Color::Empty));
-        assert_eq!(Color::Empty, board.get(coord));
+        assert_eq!(Color::Empty, board.get(&coord));
     }
 
     fn given_board_with_two_moves() -> Board {
@@ -146,8 +223,8 @@ mod tests {
         let mut board = given_board_with_two_moves();
         board.set_move(Move::Stone(Coord::new(2,3), Color::White));
         board.set_move(Move::Stone(Coord::new(3,2), Color::Black));
-        assert_eq!(board.get(Coord::new(2,3)), Color::White);
-        assert_eq!(board.get(Coord::new(3,2)), Color::Black);
+        assert_eq!(board.get(&Coord::new(2,3)), Color::White);
+        assert_eq!(board.get(&Coord::new(3,2)), Color::Black);
     }
 
     #[test]
@@ -162,7 +239,7 @@ mod tests {
         board.set_move( Move::Stone(min_coord, Color::White) );
         // it tests all positions to be sure there is not 'sliding' into neighbour intersection
         for coord in Coord::all_possibles(BOARD_MAX_SIDE) {
-            let color = board.get(coord);
+            let color = board.get(&coord);
             if coord == max_coord || coord == min_coord {
                 assert_eq!(Color::White, color);
             } else {
