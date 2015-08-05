@@ -7,7 +7,7 @@ for supporting Monte Carlo and machine learning approaches.
 The performance is measured using the following logic to generate random games:
 
 - It keeps playing until the game has finished (unlikely) or the move number is
-  equals to `board_size^2` (81 moves for 9x9, 121 for 11x11 and 361 for 19x19)
+  equals to `board_size^2` (81 moves for 9x9, 121 for 11x11 and 361 for 19x19).
 - If it can't find a valid move after `board_size*2` tries, it passes.
 
 The games tend to be played until the move limit.
