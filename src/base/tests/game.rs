@@ -66,7 +66,7 @@ mod game_test {
         assert_eq!(4, g.captured_count(Color::Black));
     }
 
-    //#[test]
+    #[test]
     fn simple_kill_then_double_kill() {
         let mut g = Game::new(19, 5.5, 0);
         play_moves(&mut g, vec!("black k10", "white l10", "black k9",  "white l9", "black j10",
