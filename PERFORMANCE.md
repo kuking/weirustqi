@@ -26,4 +26,5 @@ Measured with an _Intel(R) Core(TM) i7-4558U CPU @ 2.80GHz_
 |------------------|------------------------------|--------------|
 |play_random_9x9   | 66,562 ns/iter (+/- 4,119)   | 15023 p/s    |
 |play_random_11x11 | 103,510 ns/iter (+/- 12,822) | 9660 p/s     |
+|play_random_13x13 | 151,273 ns/iter (+/- 27,047) | 6610 p/s     |
 |play_random_19x19 | 318,778 ns/iter (+/- 43,472) | 3136 p/s     |

@@ -394,6 +394,13 @@ mod tests {
     }
 
     #[bench]
+    fn play_random_13x13(b: &mut Bencher) {
+        b.iter(|| {
+            play_random_game(13)
+        })
+    }
+
+    #[bench]
     fn play_random_9x9(b: &mut Bencher) {
         b.iter(|| {
             play_random_game(9)
