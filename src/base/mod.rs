@@ -3,5 +3,7 @@ pub mod game;
 pub mod coord;
 pub mod moves;
 pub mod color;
+pub mod rank;
 pub mod gametree;
+pub mod sgf;
 pub mod tests;
