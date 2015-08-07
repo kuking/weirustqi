@@ -2,11 +2,14 @@
 use std::collections::LinkedList;
 
 use base::moves::*;
+use base::rank::*;
 
 #[derive(Clone, Debug)]
 pub struct GameTree {
     black_name  :String,
     white_name  :String,
+    black_rank  :Rank,
+    white_rank  :Rank,
     board_size  :usize,
     handicap    :u16,
     komi        :f32,
@@ -27,6 +30,8 @@ impl GameTree {
         GameTree {
             black_name: String::new(),
             white_name: String::new(),
+            black_rank: Rank::Unknown,
+            white_rank: Rank::Unknown,
             board_size: 0,
             handicap: 0,
             komi: 0.0,
@@ -39,6 +44,12 @@ impl GameTree {
 
     pub fn set_white_name(&mut self, white_name :String) { self.white_name = white_name }
     pub fn white_name(&self) -> &String { &self.white_name }
+
+    pub fn set_white_rank(&mut self, white_rank :Rank) { self.white_rank = white_rank }
+    pub fn white_rank(&self) -> &Rank { &self.white_rank }
+
+    pub fn set_black_rank(&mut self, black_rank :Rank) { self.black_rank = black_rank }
+    pub fn black_rank(&self) -> &Rank { &self.black_rank }
 
     pub fn set_board_size(&mut self, board_size :usize) { self.board_size = board_size }
     pub fn board_size(&self) -> usize { self.board_size }
