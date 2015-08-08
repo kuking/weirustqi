@@ -2,6 +2,7 @@
 use std::collections::LinkedList;
 
 use base::moves::*;
+use base::game_result::*;
 use base::rank::*;
 
 #[derive(Clone, Debug)]
@@ -13,6 +14,7 @@ pub struct GameTree {
     board_size  :usize,
     handicap    :u16,
     komi        :f32,
+    result      :GameResult,
     moves       :LinkedList<GameNode>
 }
 
@@ -35,6 +37,7 @@ impl GameTree {
             board_size: 0,
             handicap: 0,
             komi: 0.0,
+            result: GameResult::Unknown,
             moves :LinkedList::new()
         }
     }
@@ -59,6 +62,9 @@ impl GameTree {
 
     pub fn set_handicap(&mut self, handicap :u16) { self.handicap = handicap }
     pub fn handicap(&self) -> u16 { self.handicap }
+
+    pub fn set_result(&mut self, result :GameResult) { self.result = result }
+    pub fn result(&self) -> &GameResult { &self.result }
 
     pub fn moves(&self) -> &LinkedList<GameNode> { &self.moves }
     pub fn moves_as_mut<'r>(&'r mut self) -> &'r mut LinkedList<GameNode> { &mut self.moves }
@@ -99,6 +105,9 @@ mod tests {
 
     use super::*;
     use base::moves::*;
+    use base::color::*;
+    use base::rank::*;
+    use base::game_result::*;
 
     fn amove(s :&str) -> Move {
         Move::from_str(s).unwrap()
@@ -109,15 +118,21 @@ mod tests {
         let mut gt = GameTree::new();
         gt.set_black_name("black".to_string());
         gt.set_white_name("white".to_string());
+        gt.set_black_rank(Rank::from_str("5p").unwrap());
+        gt.set_white_rank(Rank::from_str("4d").unwrap());
         gt.set_board_size(19);
         gt.set_komi(5.5);
         gt.set_handicap(1);
+        gt.set_result(GameResult::from_str("B+4.5").unwrap());
 
         assert_eq!(&"black".to_string(), gt.black_name());
         assert_eq!(&"white".to_string(), gt.white_name());
+        assert_eq!(Rank::Pro(5, true), *gt.black_rank());
+        assert_eq!(Rank::Dan(4, true), *gt.white_rank());
         assert_eq!(19, gt.board_size());
         assert_eq!(5.5, gt.komi());
         assert_eq!(1, gt.handicap());
+        assert_eq!(GameResult::Score(Color::Black, 4.5), *gt.result());
     }
 
     #[test]
