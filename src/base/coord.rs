@@ -64,6 +64,29 @@ impl Coord {
         r
     }
 
+    pub fn from_sgf(s :&str, board_size :u8) -> Result<Self, ()> {
+        let su = s.to_uppercase();
+        println!("{}", su);
+        if su.len() != 2 {
+            return Err(())
+        }
+        let mut chars = su.chars();
+        let a : u32 = chars.next().unwrap_or('\0') as u32;
+        let b : u32 = chars.next().unwrap_or('\0') as u32;
+
+        if a<65 || b<65 || a>250 || b>250 {
+            return Err(())
+        }
+
+        let az : u8 = a as u8 - 65;
+        let bz : u8 = b as u8 - 65;
+
+        if  az >= board_size || bz >= board_size {
+            return Err(())
+        }
+        Ok(Self::new(board_size-bz-1, az))
+    }
+
 }
 
 impl FromStr for Coord {
@@ -270,6 +293,42 @@ mod tests {
         // and another ..
         h.insert(Coord::new(4,5));
         assert_eq!(3, h.len());
+    }
+
+    #[test]
+    fn it_does_from_sgf() {
+        assert_eq!(Coord::from_str("A19").unwrap(), Coord::from_sgf("aa", 19).unwrap());
+        assert_eq!(Coord::from_str("T19").unwrap(), Coord::from_sgf("sa", 19).unwrap());
+        assert_eq!(Coord::from_str("T1").unwrap(),  Coord::from_sgf("ss", 19).unwrap());
+
+        assert_eq!(Coord::from_str("A9").unwrap(), Coord::from_sgf("aa", 9).unwrap());
+        assert_eq!(Coord::from_str("A5").unwrap(), Coord::from_sgf("aa", 5).unwrap());
+
+        assert_eq!(Coord::from_str("D15").unwrap(), Coord::from_sgf("de", 19).unwrap());
+        assert_eq!(Coord::from_str("O10").unwrap(), Coord::from_sgf("nj", 19).unwrap());
+        assert_eq!(Coord::from_str("T19").unwrap(), Coord::from_sgf("sa", 19).unwrap());
+        assert_eq!(Coord::from_str("A1").unwrap(),  Coord::from_sgf("as", 19).unwrap());
+        assert_eq!(Coord::from_str("T1").unwrap(),  Coord::from_sgf("ss", 19).unwrap());
+        assert_eq!(Coord::from_str("A19").unwrap(), Coord::from_sgf("aa", 19).unwrap());
+        assert_eq!(Coord::from_str("J16").unwrap(), Coord::from_sgf("id", 19).unwrap());
+        assert_eq!(Coord::from_str("R13").unwrap(), Coord::from_sgf("qg", 19).unwrap());
+        assert_eq!(Coord::from_str("H5").unwrap(),  Coord::from_sgf("ho", 19).unwrap());
+        assert_eq!(Coord::from_str("K10").unwrap(), Coord::from_sgf("jj", 19).unwrap());
+        assert_eq!(Coord::from_str("K9").unwrap(),  Coord::from_sgf("jk", 19).unwrap());
+
+        assert_eq!(Coord::from_str("C7").unwrap(),  Coord::from_sgf("cc", 9).unwrap());
+        assert_eq!(Coord::from_str("E5").unwrap(),  Coord::from_sgf("ee", 9).unwrap());
+        assert_eq!(Coord::from_str("G3").unwrap(),  Coord::from_sgf("gg", 9).unwrap());
+        assert_eq!(Coord::from_str("J9").unwrap(),  Coord::from_sgf("ia", 9).unwrap());
+        assert_eq!(Coord::from_str("A9").unwrap(),  Coord::from_sgf("aa", 9).unwrap());
+        assert_eq!(Coord::from_str("A1").unwrap(),  Coord::from_sgf("ai", 9).unwrap());
+        assert_eq!(Coord::from_str("J1").unwrap(),  Coord::from_sgf("ii", 9).unwrap());
+    }
+
+    #[test]
+    fn it_handles_invalid_from_sgf() {
+        assert!(Coord::from_sgf("sa", 5).is_err());
+        assert!(Coord::from_sgf("", 9).is_err());
     }
 
     // benchs
