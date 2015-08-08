@@ -28,6 +28,14 @@ impl Color {
             Color::White => Color::Black
         }
     }
+
+    pub fn as_char(&self) -> char {
+        match *self {
+            Color::Empty => '?',
+            Color::Black => 'B',
+            Color::White => 'W'
+        }
+    }
 }
 
 impl FromStr for Color {
@@ -92,6 +100,13 @@ mod tests {
         for co in vec!("Black", "White", "Empty") {
             assert_eq!(format!("{}", Color::from_str(&co).unwrap()), co);
         }
+    }
+
+    #[test]
+    fn it_as_char() {
+        assert_eq!('B', Color::Black.as_char());
+        assert_eq!('W', Color::White.as_char());
+        assert_eq!('?', Color::Empty.as_char());
     }
 
 }

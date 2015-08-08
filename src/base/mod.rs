@@ -4,6 +4,7 @@ pub mod coord;
 pub mod moves;
 pub mod color;
 pub mod rank;
+pub mod game_result;
 pub mod gametree;
 pub mod sgf;
 pub mod tests;
