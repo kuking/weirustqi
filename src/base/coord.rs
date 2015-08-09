@@ -66,7 +66,6 @@ impl Coord {
 
     pub fn from_sgf(s :&str, board_size :u8) -> Result<Self, ()> {
         let su = s.to_uppercase();
-        println!("{}", su);
         if su.len() != 2 {
             return Err(())
         }

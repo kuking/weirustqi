@@ -79,7 +79,7 @@ use base::rank::*;
         let cmd = if i==next_open_bracket { prev_cmd } else { up_string(chrs, i, next_open_bracket) };
         let params = sub_string(chrs, next_open_bracket + 1, next_closing_bracket);
 
-        println!("cmd={} and params={}", cmd, params);
+        //println!("cmd={} and params={}", cmd, params);
         if cmd == "GM" { // Game Type
             if  params!="1" {
                 return Err(())
@@ -141,15 +141,11 @@ use base::rank::*;
             // in the future //FIXME -maybe-
         } else if cmd == "AW" { // adds white stones *not a move*
             // ^^ READ "AB" comment
-        } else if cmd == "W" {
-            let m = get_move(&cmd, &params, gt.board_size());
-            println!("this is a move of {:?}", m);
-
-        } else if cmd == "B" {
-            let m = get_move(&cmd, &params, gt.board_size());
-            println!("this is a move of {:?}", m);
-
-
+        } else if cmd == "W" || cmd == "B" { // White moves, Black moves
+            match get_move(&cmd, &params, gt.board_size()) {
+                Ok(m)  => gt.push(GameNode::new_simple(m)),
+                Err(_) => return Err(())
+            }
         } else if cmd == "XX" {
         } else if cmd == "XX" {
 
@@ -244,8 +240,13 @@ use base::rank::*;
 #[cfg(test)]
 mod tests {
 
+    use std::str::FromStr;
+
     use super::*;
+    use base::moves::*;
+    use base::color::*;
     use base::rank::*;
+    use base::game_result::*;
 
     #[test]
     fn no_moves_just_headers() {
@@ -294,7 +295,16 @@ AP[CGoban:3]\nTM[0]\nOT[3x10 byo-yomi] HA[4])".to_string()).unwrap();
                       ;W[es];B[br];W[jb];B[kc];W[ga];B[db];W[fa];B[bb];W[eo];B[do];W[en];B[dm])"
                       .to_string()).unwrap();
 
-        //assert_eq!(30, gt.moves().len());
+        assert_eq!("yz221", gt.black_name());
+        assert_eq!("somerville", gt.white_name());
+        assert_eq!(Rank::Dan(5, true), *gt.black_rank());
+        assert_eq!(Rank::Dan(7, true), *gt.white_rank());
+        assert_eq!(GameResult::Resign(Color::Black), *gt.result());
+        assert_eq!(240, gt.moves().len());
+        assert_eq!(Move::from_str("Black N11").unwrap(), gt.moves()[173].themove());
+        assert_eq!(Move::from_str("White H9").unwrap(), gt.moves()[44].themove());
+        assert_eq!(Move::from_str("White R4").unwrap(), gt.moves()[0].themove());
+        assert_eq!(Move::from_str("Black D7").unwrap(), gt.moves()[239].themove());
     }
 
 }
