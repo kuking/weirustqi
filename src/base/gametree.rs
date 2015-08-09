@@ -1,6 +1,4 @@
 
-use std::collections::LinkedList;
-
 use base::moves::*;
 use base::game_result::*;
 use base::rank::*;
@@ -15,14 +13,14 @@ pub struct GameTree {
     handicap    :u16,
     komi        :f32,
     result      :GameResult,
-    moves       :LinkedList<GameNode>
+    moves       :Vec<GameNode>
 }
 
 #[derive(Clone, Debug)]
 pub struct GameNode {
     themove       :Move,
     comment     :String,
-    variants    :LinkedList<GameNode>
+    variants    :Vec<GameNode>
 }
 
 
@@ -38,7 +36,7 @@ impl GameTree {
             handicap: 0,
             komi: 0.0,
             result: GameResult::Unknown,
-            moves :LinkedList::new()
+            moves :Vec::new()
         }
     }
 
@@ -66,11 +64,11 @@ impl GameTree {
     pub fn set_result(&mut self, result :GameResult) { self.result = result }
     pub fn result(&self) -> &GameResult { &self.result }
 
-    pub fn moves(&self) -> &LinkedList<GameNode> { &self.moves }
-    pub fn moves_as_mut<'r>(&'r mut self) -> &'r mut LinkedList<GameNode> { &mut self.moves }
+    pub fn moves(&self) -> &Vec<GameNode> { &self.moves }
+    pub fn moves_as_mut<'r>(&'r mut self) -> &'r mut Vec<GameNode> { &mut self.moves }
 
     pub fn push(&mut self, gn :GameNode) {
-        self.moves.push_back(gn);
+        self.moves.push(gn);
     }
 
 }
@@ -78,20 +76,20 @@ impl GameTree {
 impl GameNode {
 
     pub fn new_simple(m :Move) -> GameNode {
-        GameNode { themove: m, comment: String::new(), variants: LinkedList::new() }
+        GameNode { themove: m, comment: String::new(), variants: Vec::with_capacity(0) }
     }
 
     pub fn new(m :Move, s :&str) -> GameNode {
-        GameNode { themove: m, comment: s.to_string(), variants: LinkedList::new() }
+        GameNode { themove: m, comment: s.to_string(), variants: Vec::with_capacity(0) }
     }
 
     pub fn push(& mut self, gn :GameNode) {
-        self.variants.push_back(gn)
+        self.variants.push(gn)
     }
 
     pub fn themove(&self) -> Move { self.themove }
     pub fn comment(&self) -> &String { &self.comment }
-    pub fn variants(&self) -> &LinkedList<GameNode> { &self.variants }
+    pub fn variants(&self) -> &Vec<GameNode> { &self.variants }
     pub fn has_variants(&self) -> bool { !&self.variants.is_empty() }
 }
 
@@ -141,7 +139,7 @@ mod tests {
         gt.push(GameNode::new_simple(amove("Black A1")));
 
         assert_eq!(1, gt.moves.len());
-        let gn = gt.moves().front().unwrap();
+        let gn = gt.moves().first().unwrap();
         assert_eq!(amove("Black A1"), gn.themove());
         assert_eq!(&String::new(), gn.comment());
         assert_eq!(0, gn.variants().len());
@@ -153,7 +151,7 @@ mod tests {
         gt.push(GameNode::new(amove("Black A1"), "a good move"));
 
         assert_eq!(1, gt.moves.len());
-        let gn = gt.moves().front().unwrap();
+        let gn = gt.moves().first().unwrap();
         assert_eq!(amove("Black A1"), gn.themove());
         assert_eq!(&"a good move", gn.comment());
         assert_eq!(0, gn.variants().len());
