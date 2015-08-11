@@ -4,3 +4,4 @@ extern crate rand;
 extern crate regex;
 
 pub mod base;
+pub mod mcts;

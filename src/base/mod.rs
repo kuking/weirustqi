@@ -7,4 +7,5 @@ pub mod rank;
 pub mod game_result;
 pub mod gametree;
 pub mod sgf;
+pub mod scorer;
 pub mod tests;
