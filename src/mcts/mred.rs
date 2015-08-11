@@ -28,5 +28,13 @@ impl<'r> MrEd<'r> {
         }
        }
 
+    pub fn think(&mut self) {
+
+        // if not done before, call all ministers for this function
+
+
+        // decide which moves to evaluate
+        // loop while time is avail
+    }
 
 }
