@@ -8,6 +8,7 @@ use base::color::*;
 use base::moves::*;
 use base::coord::*;
 use base::board::*;
+use base::gametree::*;
 
 #[derive(Clone, Debug)]
 pub struct Game {
@@ -42,6 +43,10 @@ impl Game {
             // japanese rules usually are 3/2 i.e. 250 moves in 19x19, but with chinese rules
             // it tends to be around 300.
         }
+    }
+
+    pub fn new_for_gametree(gt :&GameTree) -> Self {
+        Self::new(gt.board_size(), gt.komi(), gt.handicap() as usize)
     }
 
     pub fn board(&self) -> &Board { &self.board }
@@ -174,7 +179,9 @@ impl Game {
                     Color::Empty => if markers.contains(&coord) {'+'} else {'.'},
                     Color::Black => 'X',
                     Color::White => 'O',
-                    _ => '?'
+                    Color::BlackTerritory => 'x',
+                    Color::WhiteTerritory => 'o',
+                    Color::Dame => '*'
                 };
 
                 let highlight = self.move_count()>0
