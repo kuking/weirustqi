@@ -16,9 +16,13 @@ use base::rank::*;
 
     pub fn parse(s : String) -> Result<GameTree, SgfParsingError> {
         let chrs : Vec<char> = s.chars().collect();
-        let mut gt = GameTree::new();
+        let start_ii = skip_cr_lf_sp(&chrs, 0);
+        if start_ii == chrs.len() {
+            return Err(SgfParsingError::Cause(String::from("Empty-ish file")));
+        }
 
-        match recursive_greedy_parser(&mut gt, &chrs, 0) {
+        let mut gt = GameTree::new();
+        match recursive_greedy_parser(&mut gt, &chrs, start_ii) {
             Ok(ii) => {
                 if ii == chrs.len()  {
                     Ok(gt)
@@ -301,6 +305,7 @@ AP[CGoban:3]\nTM[0]\nOT[3x10 byo-yomi] HA[4])".to_string()).unwrap();
                       ;W[es];B[br];W[jb];B[kc];W[ga];B[db];W[fa];B[bb];W[eo];B[do];W[en];B[dm])"
                       .to_string()).unwrap();
 
+        assert_eq!(19, gt.board_size());
         assert_eq!("yz221", gt.black_name());
         assert_eq!("somerville", gt.white_name());
         assert_eq!(Rank::Dan(5, true), *gt.black_rank());
@@ -311,6 +316,24 @@ AP[CGoban:3]\nTM[0]\nOT[3x10 byo-yomi] HA[4])".to_string()).unwrap();
         assert_eq!(Move::from_str("White H9").unwrap(), gt.moves()[44].themove());
         assert_eq!(Move::from_str("White R4").unwrap(), gt.moves()[0].themove());
         assert_eq!(Move::from_str("Black D7").unwrap(), gt.moves()[239].themove());
+    }
+
+    #[test]
+    fn it_handles_commands_without_breaks() {
+        let gt = parse("(;FF[4]KM[0.5]AP[MoyoGo.com]SZ[19]PC[Tygem]DT[2005-04-20]HA[1]RE[W+2.5])".to_string()).unwrap();
+
+        assert_eq!(0.5, gt.komi());
+        assert_eq!(19, gt.board_size());
+        assert_eq!(1, gt.handicap());
+        assert_eq!(GameResult::Score(Color::White, 2.5), *gt.result());
+    }
+
+    #[test]
+    fn it_fails_on_empty_input() {
+        assert!(parse("".to_string()).is_err());
+        assert!(parse("\n".to_string()).is_err());
+        assert!(parse("     ".to_string()).is_err());
+        assert!(parse("  \n \n   \n ".to_string()).is_err());
     }
 
 }
