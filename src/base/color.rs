@@ -7,8 +7,8 @@ pub enum Color {
     Black = 1,
     White = 2,
     Dame = 4,
-    Black_Territory = 5,
-    White_Territory = 6
+    BlackTerritory = 5,
+    WhiteTerritory = 6
 }
 
 impl Color {
@@ -18,8 +18,8 @@ impl Color {
             1 => Color::Black,
             2 => Color::White,
             4 => Color::Dame,
-            5 => Color::Black_Territory,
-            6 => Color::White_Territory,
+            5 => Color::BlackTerritory,
+            6 => Color::WhiteTerritory,
             n => panic!(format!("{} is not a Color!", &n))
         }
     }
@@ -33,8 +33,8 @@ impl Color {
             Color::Black => Color::White,
             Color::White => Color::Black,
             Color::Dame  => Color::Empty,
-            Color::Black_Territory => Color::White_Territory,
-            Color::White_Territory => Color::Black_Territory
+            Color::BlackTerritory => Color::WhiteTerritory,
+            Color::WhiteTerritory => Color::BlackTerritory
         }
     }
 
@@ -44,8 +44,8 @@ impl Color {
             Color::Black => 'B',
             Color::White => 'W',
             Color::Dame  => '.',
-            Color::Black_Territory => 'X',
-            Color::White_Territory => 'O'
+            Color::BlackTerritory => 'X',
+            Color::WhiteTerritory => 'O'
         }
     }
 }
@@ -59,8 +59,8 @@ impl FromStr for Color {
             "BLACK" => Ok(Color::Black),
             "WHITE" => Ok(Color::White),
             "DAME"  => Ok(Color::Dame),
-            "BLACK_TERRITORY" => Ok(Color::Black_Territory),
-            "WHITE_TERRITORY" => Ok(Color::White_Territory),
+            "BLACK_TERRITORY" => Ok(Color::BlackTerritory),
+            "WHITE_TERRITORY" => Ok(Color::WhiteTerritory),
             _ => Err(ColorParseError(()))
         }
     }
@@ -74,8 +74,8 @@ impl Display for Color {
             Color::Black => f.write_str("Black"),
             Color::White => f.write_str("White"),
             Color::Dame  => f.write_str("Dame"),
-            Color::Black_Territory => f.write_str("Black_Territory"),
-            Color::White_Territory => f.write_str("White_Territory")
+            Color::BlackTerritory => f.write_str("Black_Territory"),
+            Color::WhiteTerritory => f.write_str("White_Territory")
         }
     }
 }
@@ -99,8 +99,8 @@ mod tests {
         assert_eq!(Color::Black, Color::from_str(&"Black").unwrap());
         assert_eq!(Color::White, Color::from_str(&"White").unwrap());
         assert_eq!(Color::Dame, Color::from_str(&"Dame").unwrap());
-        assert_eq!(Color::Black_Territory, Color::from_str(&"Black_Territory").unwrap());
-        assert_eq!(Color::White_Territory, Color::from_str(&"White_Territory").unwrap());
+        assert_eq!(Color::BlackTerritory, Color::from_str(&"Black_Territory").unwrap());
+        assert_eq!(Color::WhiteTerritory, Color::from_str(&"White_Territory").unwrap());
 
 
     }
@@ -110,7 +110,7 @@ mod tests {
         assert_eq!(Color::Empty, Color::from_str(&"EMPTY").unwrap());
         assert_eq!(Color::Black, Color::from_str(&"BlAcK").unwrap());
         assert_eq!(Color::White, Color::from_str(&"white").unwrap());
-        assert_eq!(Color::White_Territory, Color::from_str(&"white_TERRITORY").unwrap());
+        assert_eq!(Color::WhiteTerritory, Color::from_str(&"white_TERRITORY").unwrap());
     }
 
     #[test]
@@ -132,8 +132,8 @@ mod tests {
         assert_eq!('W', Color::White.as_char());
         assert_eq!('?', Color::Empty.as_char());
         assert_eq!('.', Color::Dame.as_char());
-        assert_eq!('X', Color::Black_Territory.as_char());
-        assert_eq!('O', Color::White_Territory.as_char());
+        assert_eq!('X', Color::BlackTerritory.as_char());
+        assert_eq!('O', Color::WhiteTerritory.as_char());
     }
 
 }
