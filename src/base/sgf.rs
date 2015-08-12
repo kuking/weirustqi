@@ -9,7 +9,12 @@ use base::moves::*;
 use base::rank::*;
 
 
-    pub fn parse(s : String) -> Result<GameTree,()> {
+    #[derive(Debug)]
+    pub enum SgfParsingError {
+        Cause(String),
+    }
+
+    pub fn parse(s : String) -> Result<GameTree, SgfParsingError> {
         let chrs : Vec<char> = s.chars().collect();
         let mut gt = GameTree::new();
 
@@ -18,21 +23,22 @@ use base::rank::*;
                 if ii == chrs.len()  {
                     Ok(gt)
                 } else {
-                    Err(())
+                    let errmsg = format!("couldn't reach EOF while parsing, ended up in {} out of {}.", ii, chrs.len());
+                    Err(SgfParsingError::Cause(errmsg))
                 }
             }
-            Err(_) => Err(())
+            Err(c) => Err(c)
         }
 
     }
 
-    fn recursive_greedy_parser(gt : &mut GameTree, chrs :&Vec<char>, i : usize) -> Result<usize,()> {
+    fn recursive_greedy_parser(gt : &mut GameTree, chrs :&Vec<char>, i : usize) -> Result<usize,SgfParsingError> {
 
         let mut prev_cmd : String = String::new();
         let mut ii = skip_cr_lf_sp(chrs, i);
         if let Some(&ch) = chrs.get(ii) {
             if ch != '(' {
-                return Err(())
+                return Err(SgfParsingError::Cause(String::from("it is not starting with (")))
             } else {
                 ii = ii + 1
             }
@@ -43,7 +49,7 @@ use base::rank::*;
         loop {
             if let Some(&ch) = chrs.get(ii) {
                 if ch == ')' {
-                    ii = ii + 1;
+                    ii = skip_cr_lf_sp(chrs, ii+1);
                     break
                 }
                 if ch == ';' {
@@ -60,7 +66,7 @@ use base::rank::*;
 
             match process_command_if_avail(gt, chrs, ii, prev_cmd) {
                 Ok((p, cmd)) => {ii = p; prev_cmd = cmd},
-                Err(_)     => return Err(())
+                Err(c)     => return Err(c)
             }
 
             ii = skip_cr_lf_sp(chrs, ii);
@@ -68,12 +74,12 @@ use base::rank::*;
         Ok(ii)
     }
 
-    fn process_command_if_avail(gt : &mut GameTree, chrs :&Vec<char>, i :usize, prev_cmd : String) -> Result<(usize, String), ()> {
+    fn process_command_if_avail(gt : &mut GameTree, chrs :&Vec<char>, i :usize, prev_cmd : String) -> Result<(usize, String), SgfParsingError> {
 
         let next_open_bracket = scan_with_limit(chrs,'[', i, chrs.len());
         let next_closing_bracket = scan_with_limit(chrs, ']', next_open_bracket, chrs.len());
         if next_open_bracket >= chrs.len() || next_closing_bracket >= chrs.len() {
-            return Err(())
+            return Err(SgfParsingError::Cause(String::from("It can't find opening and closing brackets.")))
         }
 
         let cmd = if i==next_open_bracket { prev_cmd } else { up_string(chrs, i, next_open_bracket) };
@@ -82,17 +88,17 @@ use base::rank::*;
         //println!("cmd={} and params={}", cmd, params);
         if cmd == "GM" { // Game Type
             if  params!="1" {
-                return Err(())
+                return Err(SgfParsingError::Cause(String::from("Only SGF Go Games will be parsed: GM[1]")))
             }
         } else if cmd == "FF" { // File Format
             if params!="4" {
                 //FIXME: so far, only fileformat 4 is available.
-                return Err(())
+                return Err(SgfParsingError::Cause(String::from("Only SGF File Format 4 will be parsed: FF[4]")))
             }
         } else if cmd == "SZ" { // Board Size
             match usize::from_str(&params) {
                 Ok(size) => gt.set_board_size(size),
-                Err(_)   => return Err(())
+                Err(_)   => return Err(SgfParsingError::Cause(format!("SZ (size) can't be parsed into an int, value: {}", &params)))
             }
         } else if cmd == "PW" { // White name
             gt.set_white_name(params);
@@ -101,12 +107,12 @@ use base::rank::*;
         } else if cmd == "WR" { // White rank
             match Rank::from_str(&params) {
                     Ok(rank) => gt.set_white_rank(rank),
-                    Err(_)   => return Err(())
+                    Err(_)   => return Err(SgfParsingError::Cause(format!("WR (rank) can't be parsed: {}",  &params)))
             }
         } else if cmd == "BR" { // Black rank
             match Rank::from_str(&params) {
                     Ok(rank) => gt.set_black_rank(rank),
-                    Err(_)   => return Err(())
+                    Err(_)   => return Err(SgfParsingError::Cause(format!("BR (rank) can't be parsed: {}", &params)))
             }
         } else if cmd == "DT" { // game date
             // skip
@@ -115,17 +121,17 @@ use base::rank::*;
         } else if cmd == "KM" {
             match f32::from_str(&params) {
                 Ok(komi) => gt.set_komi(komi),
-                Err(_)   => return Err(())
+                Err(_)   => return Err(SgfParsingError::Cause(format!("KM (komi) can't be parsed into a float, value: {}", &params)))
             }
         } else if cmd == "HA" { // handicap
             match u16::from_str(&params) {
                 Ok(ha) => gt.set_handicap(ha),
-                Err(_) => return Err(())
+                Err(_) => return Err(SgfParsingError::Cause(format!("HA (handicap) can't be parsed into an int, value: {}", &params)))
             }
         } else if cmd == "RE" {
             match GameResult::from_str(&params) {
                 Ok(result) => gt.set_result(result),
-                Err(_)     => return Err(())
+                Err(_)     => return Err(SgfParsingError::Cause(format!("RE (Result) can't be parsed, value: {}", &params)))
             }
         } else if cmd == "RU" { // skip rules
         } else if cmd == "CA" { // skip charset
@@ -144,14 +150,14 @@ use base::rank::*;
         } else if cmd == "W" || cmd == "B" { // White moves, Black moves
             match get_move(&cmd, &params, gt.board_size()) {
                 Ok(m)  => gt.push(GameNode::new_simple(m)),
-                Err(_) => return Err(())
+                Err(_) => return Err(SgfParsingError::Cause(String::from("W/R (a move) can't be parsed")))
             }
         } else if cmd == "XX" {
         } else if cmd == "XX" {
 
         } else {
             println!("I dont know how to deal with: {}[{}]", cmd, params);
-            return Err(())
+            return Err(SgfParsingError::Cause(String::from(format!("Unknown command: {}[{}]", cmd, params))))
         }
 
         Ok((next_closing_bracket + 1, cmd))
