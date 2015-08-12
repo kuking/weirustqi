@@ -56,7 +56,7 @@ impl Game {
         match color {
             Color::White => self.captured_white,
             Color::Black => self.captured_black,
-            Color::Empty => panic!("No dead count for empty intersection")
+            _ => panic!("No dead count {}", color)
         }
     }
 
@@ -129,7 +129,7 @@ impl Game {
         match self.next_turn { // white kills, so 'blacks' are captured
             Color::White => self.captured_white = self.captured_white + captured as u16,
             Color::Black => self.captured_black = self.captured_black + captured as u16,
-            Color::Empty => panic!("It should never be the turn for 'empty'")
+            _ => panic!("It should never be the turn for '{}'", self.next_turn)
         }
         // two passes in a row, game is finished
         if let Move::Pass(_) = *m {
@@ -173,7 +173,8 @@ impl Game {
                 let color_ch = match color {
                     Color::Empty => if markers.contains(&coord) {'+'} else {'.'},
                     Color::Black => 'X',
-                    Color::White => 'O'
+                    Color::White => 'O',
+                    _ => '?'
                 };
 
                 let highlight = self.move_count()>0
