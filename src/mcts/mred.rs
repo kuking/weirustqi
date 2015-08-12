@@ -7,7 +7,7 @@ pub struct MrEd<'r> {
     cache     :game_state::GameStateCache,
     ministers :Vec<&'r minister::Minister>,
     timer     :&'r time_keeper::TimeKeeper,
-    scorer    :&'r scorer::Scorer
+    scorer    :fn(&game::Game) -> game_result::GameResult
 }
 
 impl<'r> MrEd<'r> {
@@ -15,7 +15,7 @@ impl<'r> MrEd<'r> {
     pub fn new(game      :game::Game,
                ministers :Vec<&'r minister::Minister>,
                timer     :&'r time_keeper::TimeKeeper,
-               scorer    :&'r scorer::Scorer) -> MrEd<'r> {
+               scorer    :fn(&game::Game) -> game_result::GameResult) -> MrEd<'r> {
 
 
         let game_state_cache = game_state::GameStateCache::new((&game).board().size());
