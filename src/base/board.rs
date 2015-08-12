@@ -30,10 +30,10 @@ impl Board {
             let o = self.data_offset(&coord);
             //zobrist
             let curr = self.data[o];
-            if curr != Color::Empty {
+            if curr == Color::Black || curr == Color::White {
                 self.zobrist = self.zobrist ^ LE_ZOBRISTS[curr as usize][o];
             }
-            if color != Color::Empty {
+            if color == Color::Black || color == Color::White {
                 self.zobrist = self.zobrist ^ LE_ZOBRISTS[color as usize][o];
             }
             // position
@@ -49,6 +49,13 @@ impl Board {
 
     pub fn get(&self, coord :&Coord) -> Color {
         self.data[self.data_offset(coord)]
+    }
+
+    pub fn find_first(&self, color :Color) -> Option<Coord> {
+        match self.data.iter().enumerate().find(|e| *e.1 == color) {
+            Some(e) => Some( self.offset_to_coord(e.0) ),
+            None    => None
+        }
     }
 
     pub fn adjacents_by_color(&self, center :&Coord, color :&Color) -> Vec<Coord> {
@@ -111,6 +118,12 @@ impl Board {
     fn data_offset(&self, coord : &Coord) -> usize {
         debug_assert!(coord.row < self.size || coord.row < self.size);
         coord.row as usize * self.size as usize + coord.col as usize
+    }
+
+    #[inline]
+    fn offset_to_coord(&self, offset :usize) -> Coord {
+        let size_as_usize = self.size as usize;
+        Coord::new( (offset / size_as_usize) as u8, (offset % size_as_usize ) as u8)
     }
 
     #[inline]
@@ -229,6 +242,27 @@ mod tests {
     }
 
     #[test]
+    fn it_finds_first() {
+        let mut b = Board::new(19);
+        assert!(b.find_first(Color::Dame).is_none());
+        assert_eq!(Coord::from_str("A1").unwrap(), b.find_first(Color::Empty).unwrap()); //A1 as a1 is pos 0 in array.
+
+        b.set_move(Move::Stone(Coord::from_str("T19").unwrap(), Color::BlackTerritory));
+        assert_eq!(Coord::from_str("T19").unwrap(), b.find_first(Color::BlackTerritory).unwrap());
+
+        for col in 0..19 {
+            for row in 0..19 {
+                b.set_move(Move::Stone(Coord::new(row, col), Color::White));
+            }
+        }
+        assert!(b.find_first(Color::BlackTerritory).is_none());
+
+        b.set_move(Move::Stone(Coord::new(5,5), Color::Dame));
+        b.set_move(Move::Stone(Coord::new(5,6), Color::Dame));
+        assert_eq!(Coord::new(5,5), b.find_first(Color::Dame).unwrap());
+    }
+
+    #[test]
     fn it_eq_zobrist_for_two_empty_boards() {
         let b1 = Board::new(19);
         let b2 = Board::new(19);
@@ -300,6 +334,16 @@ mod tests {
         // border_case
         h.insert(Board::new(BOARD_MAX_SIDE));
         assert_eq!(5, h.len());
+    }
+
+    #[test]
+    fn it_roundtrips_offset_to_coord_to_data_offset() {
+        let b = Board::new(19);
+        for ofs in 0..361 {
+            let coord = b.offset_to_coord(ofs);
+            let ofs_back = b.data_offset(&coord);
+            assert_eq!(ofs, ofs_back);
+        }
     }
 
     #[test]
