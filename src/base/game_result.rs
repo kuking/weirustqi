@@ -16,6 +16,13 @@ pub enum GameResult {
     Unknown
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub struct GameResultRange {
+    result : GameResult,
+    range  : u16
+}
+
+
 impl FromStr for GameResult {
 
     type Err = GameResultParseError;
@@ -97,6 +104,52 @@ impl Hash for GameResult {
 #[derive(Debug)]
 pub struct GameResultParseError(());
 
+
+impl GameResultRange {
+    pub fn new(result :GameResult, range :u16) -> Self {
+        GameResultRange {
+            result: result,
+            range: range
+        }
+    }
+
+    pub fn includes(&self, other_result :&GameResult) -> bool {
+        let myself : f32;
+        match self.result {
+            GameResult::Score(color, score) => { if color==Color::Black { myself = -score } else { myself = score} },
+            GameResult::Resign(_)  => myself = 0.0,
+            GameResult::Forfeit(_) => myself = 0.0,
+            GameResult::Draw       => myself = 0.0,
+            GameResult::Time(_)    => myself = 0.0,
+            GameResult::Void       => return false,
+            GameResult::Unknown    => return false
+        }
+        let other : f32;
+        match other_result {
+            &GameResult::Score(color, score) => { if color==Color::Black { other = -score } else { other = score} },
+            &GameResult::Resign(_)  => other = 0.0,
+            &GameResult::Forfeit(_) => other = 0.0,
+            &GameResult::Draw       => other = 0.0,
+            &GameResult::Time(_)    => other = 0.0,
+            &GameResult::Void       => return false,
+            &GameResult::Unknown    => return false
+        }
+        return (myself-other).abs() <= self.range as f32;
+    }
+}
+
+impl Display for GameResultRange {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        f.write_fmt(format_args!("{}(±{})", self.result, self.range))
+    }
+}
+
+impl Hash for GameResultRange {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        state.write( format!("{}", self).as_bytes() )
+    }
+}
+
 // *********************************************************************************************
 // Tests
 
@@ -163,6 +216,68 @@ mod tests {
         assert_eq!(GameResult::Draw, GameResult::Draw);
         assert_eq!(GameResult::Void, GameResult::Void);
         assert_eq!(GameResult::Unknown, GameResult::Unknown);
+    }
+
+    #[test]
+    fn it_game_result_range_eq() {
+        assert_eq!( GameResultRange::new(GameResult::Score(Color::Black, 5.0), 10), GameResultRange::new(GameResult::Score(Color::Black, 5.0), 10));
+        assert!( GameResultRange::new(GameResult::Score(Color::Black, 5.0), 10) != GameResultRange::new(GameResult::Score(Color::Black, 5.0), 5));
+        assert!( GameResultRange::new(GameResult::Score(Color::Black, 5.0), 10) != GameResultRange::new(GameResult::Score(Color::Black, 6.0), 10));
+        assert!( GameResultRange::new(GameResult::Draw, 10) != GameResultRange::new(GameResult::Score(Color::Black, 5.0), 10));
+    }
+
+    #[test]
+    fn it_game_result_range_for_score() {
+        let score_b1 = GameResult::Score(Color::Black, 0.5);
+        let score_b2 = GameResult::Score(Color::Black, 8.5);
+        let score_w1 = GameResult::Score(Color::White, 3.0);
+
+        // simplex
+        assert!( GameResultRange::new(score_b1, 10).includes(&score_b2) );
+        assert!( ! GameResultRange::new(score_b1, 5).includes(&score_b2) );
+        assert!( GameResultRange::new(score_b1, 5).includes(&score_w1) ); // B+0.5(+/-5) includes W+3
+        assert!( GameResultRange::new(score_w1, 20).includes(&score_b1) );
+        assert!( GameResultRange::new(score_w1, 4).includes(&score_b1) );
+        assert!( ! GameResultRange::new(score_w1, 4).includes(&score_b2) );
+
+        // but a B+5 +/-7 vs a W+5 should be false, as there are 10 in distance
+        assert!( ! GameResultRange::new(GameResult::Score(Color::Black, 5.0), 7)
+                        .includes(&GameResult::Score(Color::White, 5.0)) );
+
+        // Resign, Forfeit, Time, Draw assumes "Score=0"
+        // resign
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Resign(Color::Black)) );
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Resign(Color::White)) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Resign(Color::Black)) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Resign(Color::White)) );
+        assert!( GameResultRange::new(score_b2, 10).includes(&GameResult::Resign(Color::White)) );
+
+        // Forfeit
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Forfeit(Color::Black)) );
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Forfeit(Color::White)) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Forfeit(Color::Black)) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Forfeit(Color::White)) );
+        assert!( GameResultRange::new(score_b2, 10).includes(&GameResult::Forfeit(Color::White)) );
+
+        // Time
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Time(Color::Black)) );
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Time(Color::White)) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Time(Color::Black)) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Time(Color::White)) );
+        assert!( GameResultRange::new(score_b2, 10).includes(&GameResult::Time(Color::White)) );
+
+        // Draw
+        assert!( GameResultRange::new(score_b1, 1).includes(&GameResult::Draw) );
+        assert!( ! GameResultRange::new(score_b2, 1).includes(&GameResult::Draw) );
+        assert!( GameResultRange::new(score_b2, 10).includes(&GameResult::Draw) );
+
+        // Void and Unknown are always not included in anything, just non-sense
+        assert!( ! GameResultRange::new(score_b1, 10).includes(&GameResult::Void ));
+        assert!( ! GameResultRange::new(score_b1, 10).includes(&GameResult::Unknown ));
+
+        // border-cases
+        assert!( ! GameResultRange::new(score_b1, 0).includes(&GameResult::Resign(Color::Black)) );
+        assert!( GameResultRange::new(score_b1, 0).includes(&score_b1) );
     }
 
 }
