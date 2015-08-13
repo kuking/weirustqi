@@ -18,8 +18,8 @@ pub enum GameResult {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct GameResultRange {
-    result : GameResult,
-    range  : u16
+    pub result : GameResult,
+    pub range  : u16
 }
 
 impl GameResult {
@@ -154,6 +154,7 @@ impl GameResultRange {
         }
         return (myself-other).abs() <= self.range as f32;
     }
+
 }
 
 impl Display for GameResultRange {
