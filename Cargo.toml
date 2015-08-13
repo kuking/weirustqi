@@ -1,11 +1,12 @@
 [dependencies]
 rand = "0.3.9"
 regex = "0.1.41"
+zip = "0.1.11"
 
 [package]
 name = "weirustqi"
 version = "0.1.0"
-authors = ["Eduardo ES Riccardi <ed@kukino.uk>"]
+authors = ["Eduardo ES Riccardi <ed+git@kukino.uk>"]
 
 [profile.bench]
 opt-level = 3
