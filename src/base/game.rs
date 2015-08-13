@@ -150,6 +150,10 @@ impl Game {
     }
 
     pub fn pretty_print(&self) -> String {
+        self.pretty_print_with_board(&self.board)
+    }
+
+    pub fn pretty_print_with_board(&self, board :&Board) -> String {
         // not the best method, or elegant one, but does the job and it is not meant to be efficient
         let mut st = String::new();
         st = st + &"\n";
@@ -158,8 +162,8 @@ impl Game {
         st = st + &"\n";
         // header row list
         st = st + &"    ";
-        for i in (0..self.board.size()) {
-            let rowc = if i>8 { (i+1+65) as char } else { (i+65) as char };
+        for i in (0..board.size()) {
+            let rowc = if i>7 { (i+1+65) as char } else { (i+65) as char };
             st = st + &format!("{} ", rowc);
         }
         if self.move_count()>0 {
@@ -167,14 +171,14 @@ impl Game {
         }
         st = st + &"\n";
         // rows
-        let markers : Vec<Coord> = Self::markers_coords(self.board.size());
-        for r in (0..self.board.size()) {
-            let row = self.board.size() - r;
+        let markers : Vec<Coord> = Self::markers_coords(board.size());
+        for r in (0..board.size()) {
+            let row = board.size() - r;
             st = st + &format!("{:3} ", row);
 
-            for c in (0..self.board.size()) {
+            for c in (0..board.size()) {
                 let coord = Coord::new(row-1,c);
-                let color = self.board.get(&coord);
+                let color = board.get(&coord);
                 let color_ch = match color {
                     Color::Empty => if markers.contains(&coord) {'+'} else {'.'},
                     Color::Black => 'X',
@@ -195,11 +199,11 @@ impl Game {
                 }
             }
             st = st + &format!("{:2}", row);
-            if row == self.board.size() {
+            if row == board.size() {
                 st = st + &format!("    Move No: {}", self.move_count());
-            } else if row == self.board.size() - 2 {
+            } else if row == board.size() - 2 {
                 st = st + &format!("    Black out: {} (White captured)", self.captured_count(Color::Black));
-            } else if row == self.board.size() - 3 {
+            } else if row == board.size() - 3 {
                 st = st + &format!("    White out: {} (Black captured)", self.captured_count(Color::White));
             }
             st = st + "\n"
@@ -207,8 +211,8 @@ impl Game {
         }
         // bottom row list
         st = st + &"    ";
-        for i in (0..self.board.size()) {
-            let rowc = if i>8 { (i+1+65) as char } else { (i+65) as char };
+        for i in (0..board.size()) {
+            let rowc = if i>7 { (i+1+65) as char } else { (i+65) as char };
             st = st + &format!("{} ", rowc);
         }
         st + &"\n\n"
