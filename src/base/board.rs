@@ -58,6 +58,14 @@ impl Board {
         }
     }
 
+    pub fn find_next(&self, color :Color, coord :&Coord) -> Option<Coord> {
+        let delta = self.data_offset(coord)+1;
+        match self.data.iter().skip(delta).enumerate().find(|e| *e.1 == color) {
+            Some(e) => Some( self.offset_to_coord(delta + e.0) ),
+            None    => None
+        }
+    }
+
     pub fn adjacents_by_color(&self, center :&Coord, color :&Color) -> Vec<Coord> {
         center.adjacents(self.size).into_iter().filter(|c|self.get(&c) == *color).collect()
     }
@@ -114,14 +122,19 @@ impl Board {
         count
     }
 
+    /// The following is handy for fast observation
+    pub fn data(&self) -> &Vec<Color> {
+        &(self.data)
+    }
+
     #[inline]
-    fn data_offset(&self, coord : &Coord) -> usize {
+    pub fn data_offset(&self, coord : &Coord) -> usize {
         debug_assert!(coord.row < self.size || coord.row < self.size);
         coord.row as usize * self.size as usize + coord.col as usize
     }
 
     #[inline]
-    fn offset_to_coord(&self, offset :usize) -> Coord {
+    pub fn offset_to_coord(&self, offset :usize) -> Coord {
         let size_as_usize = self.size as usize;
         Coord::new( (offset / size_as_usize) as u8, (offset % size_as_usize ) as u8)
     }
@@ -242,10 +255,14 @@ mod tests {
     }
 
     #[test]
-    fn it_finds_first() {
+    fn it_finds_first_and_next() {
         let mut b = Board::new(19);
         assert!(b.find_first(Color::Dame).is_none());
         assert_eq!(Coord::from_str("A1").unwrap(), b.find_first(Color::Empty).unwrap()); //A1 as a1 is pos 0 in array.
+        assert_eq!(Coord::from_str("B1").unwrap(), b.find_next(Color::Empty, &Coord::from_str("A1").unwrap()).unwrap());
+        assert_eq!(Coord::from_str("C1").unwrap(), b.find_next(Color::Empty, &Coord::from_str("B1").unwrap()).unwrap());
+        assert_eq!(Coord::from_str("A2").unwrap(), b.find_next(Color::Empty, &Coord::from_str("T1").unwrap()).unwrap());
+        assert!(b.find_next(Color::Empty, &Coord::from_str("T19").unwrap()).is_none());
 
         b.set_move(Move::Stone(Coord::from_str("T19").unwrap(), Color::BlackTerritory));
         assert_eq!(Coord::from_str("T19").unwrap(), b.find_first(Color::BlackTerritory).unwrap());
@@ -260,6 +277,8 @@ mod tests {
         b.set_move(Move::Stone(Coord::new(5,5), Color::Dame));
         b.set_move(Move::Stone(Coord::new(5,6), Color::Dame));
         assert_eq!(Coord::new(5,5), b.find_first(Color::Dame).unwrap());
+        assert_eq!(Coord::new(5,7), b.find_next(Color::White, &Coord::new(5,5)).unwrap());
+        assert!(b.find_next(Color::WhiteTerritory, &Coord::new(0,0)).is_none());
     }
 
     #[test]
