@@ -38,6 +38,12 @@ impl GameResult {
         }
     }
 
+    pub fn is_resign(&self) -> bool {
+        match self {
+            &GameResult::Resign(_) => true,
+            _ => false
+        }
+    }
 }
 
 
