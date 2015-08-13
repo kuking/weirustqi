@@ -70,8 +70,8 @@ pub fn optimistic_floodfill_scorer(game :&Game) -> GameResultRange {
             let blacks_l = ffr.blacks.len() as isize;
             let whites_l = ffr.whites.len() as isize;
 
-            let is_white_territory = whites_l > 0 && blacks_l < whites_l && whites_l - blacks_l > 3;
-            let is_black_territory = blacks_l > 0 && whites_l < blacks_l && blacks_l - whites_l > 3;
+            let is_white_territory = whites_l > 0 && blacks_l < whites_l && whites_l - blacks_l > 2;
+            let is_black_territory = blacks_l > 0 && whites_l < blacks_l && blacks_l - whites_l > 2;
 
             if is_black_territory {
                 for coord in ffr.whites {
@@ -103,7 +103,7 @@ pub fn optimistic_floodfill_scorer(game :&Game) -> GameResultRange {
 
     println!("{}", game.pretty_print_with_board(&wb));
 
-    let extra_range = (extra_black_captured + extra_white_captured) * 3 / 2;
+    let extra_range = (extra_black_captured + extra_white_captured) * 3;
     calculate_result_range(&wb, game, extra_black_captured, extra_white_captured, extra_range)
 }
 
