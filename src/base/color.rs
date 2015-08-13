@@ -1,5 +1,6 @@
 use std::str::FromStr;
 use std::fmt::{Formatter, Error, Display};
+use std::hash::{Hash, Hasher};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Color {
@@ -77,6 +78,12 @@ impl Display for Color {
             Color::BlackTerritory => f.write_str("Black_Territory"),
             Color::WhiteTerritory => f.write_str("White_Territory")
         }
+    }
+}
+
+impl Hash for Color {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        state.write_u8(*self as u8);
     }
 }
 
