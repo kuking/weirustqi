@@ -22,6 +22,17 @@ pub struct GameResultRange {
     range  : u16
 }
 
+impl GameResult {
+
+    pub fn is_score(&self) -> bool {
+        match self {
+            &GameResult::Score(_,_) => true,
+            _ => false
+        }
+    }
+
+}
+
 
 impl FromStr for GameResult {
 
