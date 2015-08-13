@@ -31,6 +31,13 @@ impl GameResult {
         }
     }
 
+    pub fn is_time(&self) -> bool {
+        match self {
+            &GameResult::Time(_) => true,
+            _ => false
+        }
+    }
+
 }
 
 
