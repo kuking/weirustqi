@@ -8,7 +8,7 @@ use base::coord::*;
 use std::collections::HashSet;
 
 
-pub fn conservative_floodfill_scorer(game :&Game) -> GameResultRange {
+pub fn conservative_floodfill_scorer_with_board(game :&Game) -> (Board, GameResultRange) {
 
     let mut wb = game.board().clone();
 
@@ -44,15 +44,21 @@ pub fn conservative_floodfill_scorer(game :&Game) -> GameResultRange {
         }
     }
 
-    println!("{}", game.pretty_print_with_board(&wb));
+    //println!("{}", game.pretty_print_with_board(&wb));
 
-    calculate_result_range(&wb, game, 0, 0, 0)
+    let result_range = calculate_result_range(&wb, game, 0, 0, 0);
+    (wb, result_range)
 }
+
+pub fn conservative_floodfill_scorer(game :&Game) -> GameResultRange {
+    conservative_floodfill_scorer_with_board(game).1
+}
+
 
 /// similar to conservative_floodfill_scorer but if there are one or two stones in a group, assumes
 /// they can be killed.
 
-pub fn optimistic_floodfill_scorer(game :&Game) -> GameResultRange {
+pub fn optimistic_floodfill_scorer_with_board(game :&Game) -> (Board, GameResultRange) {
 
     let mut wb = game.board().clone();
 
@@ -101,13 +107,16 @@ pub fn optimistic_floodfill_scorer(game :&Game) -> GameResultRange {
         }
     }
 
-    println!("{}", game.pretty_print_with_board(&wb));
+    //println!("{}", game.pretty_print_with_board(&wb));
 
     let extra_range = (extra_black_captured + extra_white_captured) * 3;
-    calculate_result_range(&wb, game, extra_black_captured, extra_white_captured, extra_range)
+    let result_range = calculate_result_range(&wb, game, extra_black_captured, extra_white_captured, extra_range);
+    (wb, result_range)
 }
 
-
+pub fn optimistic_floodfill_scorer(game :&Game) -> GameResultRange {
+    optimistic_floodfill_scorer_with_board(game).1
+}
 
 fn calculate_result_range(board :&Board, game :&Game, extra_black_captured :u16, extra_white_captured :u16, extra_range :u16) -> GameResultRange {
 
