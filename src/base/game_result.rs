@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use std::fmt::{Formatter, Error, Display};
 use std::hash::{Hash, Hasher};
+use std::f32;
 
 use base::color::*;
 
@@ -138,27 +139,34 @@ impl GameResultRange {
     }
 
     pub fn includes(&self, other_result :&GameResult) -> bool {
-        let myself : f32;
-        match self.result {
-            GameResult::Score(color, score) => { if color==Color::Black { myself = -score } else { myself = score} },
-            GameResult::Resign(_)  => myself = 0.0,
-            GameResult::Forfeit(_) => myself = 0.0,
-            GameResult::Draw       => myself = 0.0,
-            GameResult::Time(_)    => myself = 0.0,
-            GameResult::Void       => return false,
-            GameResult::Unknown    => return false
-        }
-        let other : f32;
-        match other_result {
-            &GameResult::Score(color, score) => { if color==Color::Black { other = -score } else { other = score} },
-            &GameResult::Resign(_)  => other = 0.0,
-            &GameResult::Forfeit(_) => other = 0.0,
-            &GameResult::Draw       => other = 0.0,
-            &GameResult::Time(_)    => other = 0.0,
-            &GameResult::Void       => return false,
-            &GameResult::Unknown    => return false
-        }
+        let myself = Self::lineal_value(&self.result);
+        let other = Self::lineal_value(other_result);
         return (myself-other).abs() <= self.range as f32;
+    }
+
+    fn lineal_value(gr :&GameResult) -> f32 {
+        match gr {
+            &GameResult::Score(color, score) => { if color==Color::Black { -score } else { score} },
+            &GameResult::Resign(_)  => 0.0,
+            &GameResult::Forfeit(_) => 0.0,
+            &GameResult::Draw       => 0.0,
+            &GameResult::Time(_)    => 0.0,
+            &GameResult::Void       => f32::NAN,
+            &GameResult::Unknown    => f32::NAN
+        }
+    }
+
+    //TODO: testing, the idea is B+10(+/-20) is for 'black' better means, the other should be better than W+10 (as B+10-20=W+10)
+    // but if for 'white' means, B+10+20=B+30, the other result should be better than
+    //XXX this needs more thinking
+    pub fn better_than_for(&self, other : &GameResultRange, for_color :Color) -> bool {
+        let myself = Self::lineal_value(&self.result);
+        let otherv = Self::lineal_value(&other.result);
+        if for_color == Color::Black {
+            (myself + self.range as f32) < (otherv + other.range as f32)
+        } else {
+            (myself - self.range as f32) > (otherv - other.range as f32)
+        }
     }
 
 }

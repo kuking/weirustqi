@@ -71,6 +71,11 @@ impl Board {
     }
 
     // TODO: TEST
+    pub fn is_eye(&self, eye :&Coord, color :&Color) -> bool {
+        self.get(eye) == Color::Empty && eye.adjacents(self.size).into_iter().all(|c| self.get(&c) == *color)
+    }
+
+    // TODO: TEST
     fn find_at_least_one_liberty_internal(&self, paint :&mut Vec<Coord>, our_color :Color, coord : Coord) -> bool {
         // assumes current coord is already in the set and our color
         for adj in coord.adjacents(self.size) {

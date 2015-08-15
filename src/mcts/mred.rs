@@ -1,5 +1,11 @@
+extern crate rand;
+use rand::Rng;
+
 use base::*;
+use base::coord::*;
+use base::color::*;
 use base::moves::*;
+use base::board::*;
 use base::game::*;
 use base::game_result::*;
 
@@ -12,7 +18,9 @@ pub struct MrEd<'r> {
     cache     :game_state::GameStateCache,
     ministers :Vec<&'r minister::Minister>,
     keeper    :&'r BrainKeeper,
-    scorer    :fn(&Game) -> GameResultRange
+    scorer    :fn(&Game) -> GameResultRange,
+    turn_best_move   :Move,
+    turn_best_result :GameResultRange
 }
 
 impl<'r> MrEd<'r> {
@@ -24,12 +32,15 @@ impl<'r> MrEd<'r> {
 
 
         let game_state_cache = game_state::GameStateCache::new((&game).board().size());
+        let game_result = GameResultRange::new(GameResult::Draw, (game.board().size() as u16).pow(2));
         MrEd {
             game  :game,
             cache :game_state_cache,
             ministers :ministers,
             keeper :keeper,
-            scorer :scorer
+            scorer :scorer,
+            turn_best_move   :Move::Pass(Color::Black),
+            turn_best_result :game_result
         }
     }
 
@@ -38,15 +49,86 @@ impl<'r> MrEd<'r> {
 
     pub fn think(&mut self) {
 
-        // if not done before, call all ministers for this function
+        let my_color = self.game.next_turn();
+        let all_coords = Coord::all_possibles(self.game.board().size() as usize);
 
+        for coord in all_coords {
+            let m = Move::Stone(coord, my_color);
+            if Self::is_ok_move(self.game.board(), &m) {
+                let mut game = self.game.clone();
+                if game.play(m) {
+                    let result = Self::super_fast_playout(game);
+                    if result.better_than_for(&self.turn_best_result, my_color) {
+                        self.turn_best_result = result;
+                        self.turn_best_move = m;
+                    }
+                }
+            }
+        }
 
-        // decide which moves to evaluate
-        // loop while time is avail
     }
 
-    pub fn best_move(&self) -> moves::Move {
-        Move::Pass(self.game.next_turn())
+    pub fn new_turn(&mut self) {
+        self.turn_best_move = Move::Pass(self.game.next_turn());
+        self.turn_best_result = GameResultRange::new(GameResult::Draw, 10000);
     }
+
+
+    fn super_fast_playout(mut g :Game) -> GameResultRange {
+        let mut rng = rand::thread_rng();
+        let board_size = g.board().size() as usize;
+        while !g.finished() && g.move_count() < 2*board_size*board_size {
+            let mut count = 0;
+            let turn_color = g.next_turn();
+            let mut non_empty : Vec<usize> = vec!();
+            // one move
+            loop {
+                count = count + 1;
+
+                let coord;
+                if count > board_size/3 {
+                    if non_empty.is_empty() {
+                        non_empty = g.board().data().iter().
+                            enumerate().filter(|&(_,&v)| v == Color::Empty).map(|(n,_)|n).collect();
+                    }
+                    let random = rng.gen::<usize>() % non_empty.len();
+                    coord = g.board().offset_to_coord(random);
+                } else {
+                    coord = Coord::random(board_size);
+                }
+
+                let m = Move::Stone(coord, turn_color);
+                if Self::is_ok_move(g.board(), &m) && g.play(m) {
+                    break;
+                }
+
+                if count > board_size/2 {
+                    g.play(Move::Pass(turn_color));
+                    break;
+                }
+
+            }
+        }
+        scorer::conservative_floodfill_scorer(&g)
+    }
+
+    fn is_ok_move(b : &Board, m :&Move) -> bool {
+        if b.get(&m.coord()) != Color::Empty {
+            false
+        } else if b.is_eye(&m.coord(), &m.color()) {
+            false
+        } else {
+            true
+        }
+    }
+
+    pub fn best_move(&self) -> Move {
+        self.turn_best_move
+    }
+
+    pub fn best_result(&self) -> GameResultRange {
+        self.turn_best_result
+    }
+
 
 }
