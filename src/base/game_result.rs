@@ -45,6 +45,18 @@ impl GameResult {
             _ => false
         }
     }
+
+    // TODO: TEST
+    pub fn color(&self) -> Color {
+        match self {
+            &GameResult::Score(c, _) => c,
+            &GameResult::Resign(c)   => c,
+            &GameResult::Forfeit(c)  => c,
+            &GameResult::Time(c)     => c,
+            _                      => Color::Empty
+        }
+    }
+
 }
 
 
@@ -166,6 +178,14 @@ impl GameResultRange {
             (myself + self.range as f32) < (otherv + other.range as f32)
         } else {
             (myself - self.range as f32) > (otherv - other.range as f32)
+        }
+    }
+
+    // TODO: TEST
+    pub fn safe_win(&self) -> bool {
+        match self.result {
+            GameResult::Score(_, score) => score > self.range as f32,
+            _ => false
         }
     }
 
