@@ -130,5 +130,29 @@ impl<'r> MrEd<'r> {
         self.turn_best_result
     }
 
+    pub fn suggested_move(&self) -> Move {
+        // suggest passing if either it can't win, or previous is pass and it knows it will win.
+        if self.game().next_turn() != self.turn_best_result.result.color() ||
+           (self.game().next_turn() == self.turn_best_result.result.color() && self.turn_best_result.safe_win() && self.last_two_moves_is_pass()) {
+            Move::Pass(self.game.next_turn())
+        } else {
+            self.turn_best_move
+        }
+    }
+
+    pub fn last_two_moves_is_pass(&self) -> bool {
+        let moves = self.game.moves();
+        let n = moves.len();
+        if n<3 {
+            return false;
+        }
+        if let Some(last) = moves.get(n-1) {
+            if let Some(last_last) = moves.get(n-3) {
+                return last.is_pass() && last_last.is_pass()
+            }
+        }
+        false
+    }
+
 
 }
