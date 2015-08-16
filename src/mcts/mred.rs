@@ -16,7 +16,7 @@ use mcts::analytics::brain_keeper::*;
 pub struct MrEd<'r> {
     game      :Game,
     cache     :game_state::GameStateCache,
-    ministers :Vec<&'r minister::Minister>,
+    //ministers :Vec<&'r minister::Minister>,
     keeper    :&'r BrainKeeper,
     scorer    :fn(&Game) -> GameResultRange,
     turn_best_move   :Move,
@@ -26,7 +26,7 @@ pub struct MrEd<'r> {
 impl<'r> MrEd<'r> {
 
     pub fn new(game      :Game,
-               ministers :Vec<&'r minister::Minister>,
+               //ministers :Vec<&'r minister::Minister>,
                keeper    :&'r BrainKeeper,
                scorer    :fn(&Game) -> GameResultRange) -> MrEd<'r> {
 
@@ -36,7 +36,7 @@ impl<'r> MrEd<'r> {
         MrEd {
             game  :game,
             cache :game_state_cache,
-            ministers :ministers,
+            //ministers :ministers,
             keeper :keeper,
             scorer :scorer,
             turn_best_move   :Move::Pass(Color::Black),

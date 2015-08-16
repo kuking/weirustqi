@@ -131,7 +131,7 @@ use std::io::stdout;
 fn mred_play() {
 
     let bk = DefaultBrainKeeper::new(10000, 10000, 1);
-    let mut mred = MrEd::new(Game::new(9, 4.5, 0), vec!(), &bk, scorer::optimistic_floodfill_scorer);
+    let mut mred = MrEd::new(Game::new(19, 4.5, 0), &bk, scorer::optimistic_floodfill_scorer);
 
     while !mred.game().finished() {
 
