@@ -15,8 +15,8 @@ use mcts::analytics::brain_keeper::*;
 
 pub struct MrEd<'r> {
     game      :Game,
-    cache     :game_state::GameStateCache,
-    //ministers :Vec<&'r minister::Minister>,
+    cache     :game_tree::GameTreeCache,
+    generation :u64,
     keeper    :&'r BrainKeeper,
     scorer    :fn(&Game) -> GameResultRange,
     turn_best_move   :Move,
@@ -26,17 +26,16 @@ pub struct MrEd<'r> {
 impl<'r> MrEd<'r> {
 
     pub fn new(game      :Game,
-               //ministers :Vec<&'r minister::Minister>,
                keeper    :&'r BrainKeeper,
                scorer    :fn(&Game) -> GameResultRange) -> MrEd<'r> {
 
 
-        let game_state_cache = game_state::GameStateCache::new((&game).board().size());
+        let game_tree_cache = game_tree::GameTreeCache::new((&game).board().size());
         let game_result = GameResultRange::new(GameResult::Draw, (game.board().size() as u16).pow(2));
         MrEd {
             game  :game,
-            cache :game_state_cache,
-            //ministers :ministers,
+            cache :game_tree_cache,
+            generation :0,
             keeper :keeper,
             scorer :scorer,
             turn_best_move   :Move::Pass(Color::Black),
@@ -68,11 +67,63 @@ impl<'r> MrEd<'r> {
 
     }
 
+    pub fn think_new(&mut self) {
+
+        let my_color = self.game.next_turn();
+        self.generation = self.generation + 1;
+
+        let mut game_tree = self.cache.get_or_create_as_mut(&self.generation, &self.game);
+
+
+    }
+t d
+
     pub fn new_turn(&mut self) {
         self.turn_best_move = Move::Pass(self.game.next_turn());
         self.turn_best_result = GameResultRange::new(GameResult::Draw, 10000);
     }
 
+    fn is_ok_move(b : &Board, m :&Move) -> bool {
+        if b.get(&m.coord()) != Color::Empty {
+            false
+        } else if b.is_eye(&m.coord(), &m.color()) {
+            false
+        } else {
+            true
+        }
+    }
+
+    pub fn best_move(&self) -> Move {
+        self.turn_best_move
+    }
+
+    pub fn best_result(&self) -> GameResultRange {
+        self.turn_best_result
+    }
+
+    pub fn suggested_move(&self) -> Move {
+        // suggest passing if either it can't win, or previous is pass and it knows it will win.
+        if self.game().next_turn() != self.turn_best_result.result.color() ||
+           (self.game().next_turn() == self.turn_best_result.result.color() && self.turn_best_result.safe_win() && self.last_move_is_pass()) {
+            Move::Pass(self.game.next_turn())
+        } else {
+            self.turn_best_move
+        }
+    }
+
+    fn last_move_is_pass(&self) -> bool {
+        let moves = self.game.moves();
+        let n = moves.len();
+        if n<2 {
+            return false;
+        }
+        if let Some(last) = moves.get(n-1) {
+            return last.is_pass()
+        }
+        false
+    }
+
+    // ------
 
     fn super_fast_playout(mut g :Game) -> GameResultRange {
         let mut rng = rand::thread_rng();
@@ -111,46 +162,5 @@ impl<'r> MrEd<'r> {
         }
         scorer::conservative_floodfill_scorer(&g)
     }
-
-    fn is_ok_move(b : &Board, m :&Move) -> bool {
-        if b.get(&m.coord()) != Color::Empty {
-            false
-        } else if b.is_eye(&m.coord(), &m.color()) {
-            false
-        } else {
-            true
-        }
-    }
-
-    pub fn best_move(&self) -> Move {
-        self.turn_best_move
-    }
-
-    pub fn best_result(&self) -> GameResultRange {
-        self.turn_best_result
-    }
-
-    pub fn suggested_move(&self) -> Move {
-        // suggest passing if either it can't win, or previous is pass and it knows it will win.
-        if self.game().next_turn() != self.turn_best_result.result.color() ||
-           (self.game().next_turn() == self.turn_best_result.result.color() && self.turn_best_result.safe_win() && self.last_move_is_pass()) {
-            Move::Pass(self.game.next_turn())
-        } else {
-            self.turn_best_move
-        }
-    }
-
-    pub fn last_move_is_pass(&self) -> bool {
-        let moves = self.game.moves();
-        let n = moves.len();
-        if n<2 {
-            return false;
-        }
-        if let Some(last) = moves.get(n-1) {
-            return last.is_pass()
-        }
-        false
-    }
-
 
 }

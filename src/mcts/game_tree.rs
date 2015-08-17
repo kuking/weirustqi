@@ -2,27 +2,27 @@ use std::collections::HashMap;
 
 use base::*;
 
-pub struct GameState {
+pub struct GameTreeNode {
     zobrist  :u64,
     game     :game::Game,
-    stats    :HashMap<coord::Coord, CoordGameState>,
+    stats    :HashMap<coord::Coord, MoveStat>,
     last_used_gen  :u64
 }
 
-pub struct GameStateCache {
-    entries :HashMap<u64, GameState>
+pub struct GameTreeCache {
+    entries :HashMap<u64, GameTreeNode>
 }
 
-pub struct CoordGameState {
+pub struct MoveStat {
     pub votes   :u32,
     pub black_wins :u32,
     pub white_wins :u32,
 }
 
-impl GameState {
+impl GameTreeNode {
 
-    pub fn new(game : game::Game, generation :u64) -> GameState {
-        GameState {
+    pub fn new(game : game::Game, generation :u64) -> GameTreeNode {
+        GameTreeNode {
             zobrist : game.board().zobrist(),
             game    : game.clone(),
             stats   : HashMap::with_capacity(game.board().size() as usize), //FIXME: tune
@@ -32,12 +32,12 @@ impl GameState {
 
 }
 
-impl GameStateCache {
+impl GameTreeCache {
 
-    pub fn new(board_size :u8) -> GameStateCache {
+    pub fn new(board_size :u8) -> GameTreeCache {
         let est_cache_size = (board_size as usize).pow(5); //FIXME: TUNE pls
         // values that will be generated are: 9=59049, 13=371293, 19=2476099
-        GameStateCache {
+        GameTreeCache {
             entries :HashMap::with_capacity(est_cache_size)
         }
     }
@@ -50,15 +50,15 @@ impl GameStateCache {
         for remove in to_remove { self.entries.remove(&remove); }
     }
 
-    fn get_as_mut(&mut self, generation :&u64, game : &game::Game) -> Option<&mut GameState> {
+    fn get_as_mut(&mut self, generation :&u64, game : &game::Game) -> Option<&mut GameTreeNode> {
         self.entries.get_mut( &game.board().zobrist() )
     }
 
-    fn insert(&mut self, generation :u64, game : game::Game) -> Option<GameState> {
-        self.entries.insert(game.board().zobrist(), GameState::new(game, generation) )
+    fn insert(&mut self, generation :u64, game : game::Game) -> Option<GameTreeNode> {
+        self.entries.insert(game.board().zobrist(), GameTreeNode::new(game, generation) )
     }
 
-    pub fn get_or_create_as_mut(&mut self, generation : &u64, game : &game::Game) -> &mut GameState {
+    pub fn get_or_create_as_mut(&mut self, generation : &u64, game : &game::Game) -> &mut GameTreeNode {
         // got a bit crazy with keepting mutability, etc... /TODO: should be more performant
         if !self.entries.contains_key(&game.board().zobrist()) {
             self.insert(generation.clone(), game.clone());
