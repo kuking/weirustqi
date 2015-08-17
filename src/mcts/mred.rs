@@ -76,7 +76,7 @@ impl<'r> MrEd<'r> {
 
 
     }
-t d
+
 
     pub fn new_turn(&mut self) {
         self.turn_best_move = Move::Pass(self.game.next_turn());
