@@ -72,7 +72,6 @@ pub fn optimistic_floodfill_scorer_with_board(game :&Game) -> (Board, GameResult
 
             let ffr = flood_fill(&wb, curr);
 
-            let flooded_l = ffr.flooded.len() as isize;
             let blacks_l = ffr.blacks.len() as isize;
             let whites_l = ffr.whites.len() as isize;
 
