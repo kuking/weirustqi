@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use base::*;
+use base::color::*;
+use base::coord::*;
 
 pub struct GameTreeNode {
-    zobrist  :u64,
     game     :game::Game,
-    stats    :HashMap<coord::Coord, MoveStat>,
+    stats    :HashMap<Coord, MoveStat>,
     last_used_gen  :u64
 }
 
@@ -13,21 +14,34 @@ pub struct GameTreeCache {
     entries :HashMap<u64, GameTreeNode>
 }
 
+#[derive(Debug)]
 pub struct MoveStat {
-    pub votes   :u32,
-    pub black_wins :u32,
-    pub white_wins :u32,
+    votes   :u32,
+    black_wins :u32,
+    white_wins :u32,
 }
 
 impl GameTreeNode {
 
     pub fn new(game : game::Game, generation :u64) -> GameTreeNode {
         GameTreeNode {
-            zobrist : game.board().zobrist(),
             game    : game.clone(),
             stats   : HashMap::with_capacity(game.board().size() as usize), //FIXME: tune
             last_used_gen : generation
         }
+    }
+
+    pub fn next_to_explore(&self, count :usize) -> Vec<Coord> {
+        let mut res : Vec<Coord> = vec!();
+        let turn = self.game.next_turn();
+        for (coord, stat) in &self.stats {
+            let score = stat.votes() + stat.wins_for(turn);
+            let played = stat.played();
+
+
+
+        }
+        res
     }
 
 }
@@ -70,6 +84,26 @@ impl GameTreeCache {
         } else {
             panic!("Failed to retrieve content");
         }
+    }
+
+}
+
+impl MoveStat {
+
+    pub fn wins_for(&self, color :Color) -> u32 {
+        if color == Color::White {
+            self.white_wins
+        } else {
+            self.black_wins
+        }
+    }
+
+    pub fn played(&self) -> u32 {
+        self.white_wins + self.black_wins
+    }
+
+    pub fn votes(&self) -> u32 {
+        self.votes
     }
 
 
