@@ -4,9 +4,12 @@ use base::*;
 use base::color::*;
 use base::coord::*;
 
+use std::cmp;
+
 pub struct GameTreeNode {
     game     :game::Game,
     stats    :HashMap<Coord, MoveStat>,
+    playouts :u32,
     last_used_gen  :u64
 }
 
@@ -21,27 +24,43 @@ pub struct MoveStat {
     white_wins :u32,
 }
 
+static UCB_C : f32 = 0.2;
+
 impl GameTreeNode {
+
 
     pub fn new(game : game::Game, generation :u64) -> GameTreeNode {
         GameTreeNode {
             game    : game.clone(),
             stats   : HashMap::with_capacity(game.board().size() as usize), //FIXME: tune
+            playouts : 0,
             last_used_gen : generation
         }
     }
 
     pub fn next_to_explore(&self, count :usize) -> Vec<Coord> {
-        let mut res : Vec<Coord> = vec!();
+        let mut res : Vec<(Coord, f32)> = vec!();
+
+        // calculates UCB for each node with playout
+        let node_playouts : f32 = self.playouts as f32;
         let turn = self.game.next_turn();
         for (coord, stat) in &self.stats {
-            let score = stat.votes() + stat.wins_for(turn);
-            let played = stat.played();
+            let wins   : f32 = stat.votes() as f32 + stat.wins_for(turn) as f32;
+            let played : f32 = stat.played() as f32;
 
-
-
+            let ucb =  wins / played + UCB_C * ( node_playouts.ln() /  played).sqrt() ;
+            res.push((coord.clone(), ucb));
         }
-        res
+
+        // adds the nodes that don't have playout yet
+        let busize = self.game.board().size() as usize;
+        for coord in Coord::all_possibles(busize).into_iter().filter(|a| self.stats.contains_key(&a)) {
+            res.push((coord.clone(), 1000.0));
+        }
+
+        res.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+
+        res.into_iter().map(|a| a.0).collect()
     }
 
 }
