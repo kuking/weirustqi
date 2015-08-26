@@ -134,7 +134,7 @@ fn calculate_result_range(board :&Board, game :&Game, extra_black_captured :u16,
 
     let winning_color = if count<0.0 { Color::Black } else { Color::White };
     let winning_score = count.abs();
-    let range = counted_colors.dame + extra_range;
+    let range = counted_colors.dame + counted_colors.empty + extra_range;
 
     GameResultRange::new(GameResult::Score(winning_color, winning_score), range)
 }
