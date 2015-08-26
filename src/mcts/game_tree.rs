@@ -4,8 +4,6 @@ use base::*;
 use base::color::*;
 use base::coord::*;
 
-use std::cmp;
-
 pub struct GameTreeNode {
     game     :game::Game,
     stats    :HashMap<Coord, MoveStat>,
