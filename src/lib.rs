@@ -1,4 +1,3 @@
-#![feature(collections)]
 #![feature(test)]
 extern crate test;
 extern crate rand;
