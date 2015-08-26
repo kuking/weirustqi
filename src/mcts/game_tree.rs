@@ -36,7 +36,7 @@ impl GameTreeNode {
         }
     }
 
-    pub fn next_to_explore(&self, count :usize) -> Vec<Coord> {
+    pub fn next_to_explore(&self) -> Vec<Coord> {
         let mut res : Vec<(Coord, f32)> = vec!();
 
         // calculates UCB for each node with playout
@@ -81,7 +81,7 @@ impl GameTreeCache {
         for remove in to_remove { self.entries.remove(&remove); }
     }
 
-    fn get_as_mut(&mut self, generation :&u64, game : &game::Game) -> Option<&mut GameTreeNode> {
+    fn get_as_mut(&mut self, game : &game::Game) -> Option<&mut GameTreeNode> {
         self.entries.get_mut( &game.board().zobrist() )
     }
 
@@ -95,7 +95,7 @@ impl GameTreeCache {
             self.insert(generation.clone(), game.clone());
         }
 
-        if let Some(entry) = self.get_as_mut(generation, game) {
+        if let Some(entry) = self.get_as_mut(game) {
             entry.last_used_gen = *generation;
             entry
         } else {
