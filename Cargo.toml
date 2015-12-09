@@ -1,7 +1,7 @@
 [dependencies]
-rand = "0.3.9"
-regex = "0.1.41"
-zip = "0.1.11"
+rand = "*"
+regex = "*"
+zip = "*"
 
 [package]
 name = "weirustqi"
